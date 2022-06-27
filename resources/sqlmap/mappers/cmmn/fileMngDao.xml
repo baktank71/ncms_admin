@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="file">
+
+	<!-- 파일 목록 조회 -->
+	<select id="contentsFileList" parameterType="egovMap" resultType="egovMap">
+		SELECT file_id, attachment, attachment_original, server_path 
+		FROM contents_info_file
+		WHERE contents_id = #{contentsId}
+	</select>
+	
+	<!-- 파일 정보 조회 -->
+	<select id="contentsFileInfo" parameterType="egovMap" resultType="egovMap">
+		SELECT attachment, attachment_original, server_path 
+		FROM contents_info_file
+		WHERE file_id = #{fileId}
+	</select>
+	
+	<!-- 선택한 컨텐츠 파일 목록 -->
+	<select id="selectFileList" parameterType="egovMap" resultType="egovMap">
+		SELECT ${FILE_ID}, ${ATTACHMENT}, ${ATTACHMENT_ORIGINAL}, ${SERVER_PATH}
+		  FROM ${TABLE_NAME}
+		 WHERE ${CONTENTS_ID} = #{contentsId}
+	</select>
+	
+	<!-- 선택한 파일 정보 조회 -->
+	<select id="selectFileInfo" parameterType="egovMap" resultType="egovMap">
+		SELECT ${ATTACHMENT}, ${ATTACHMENT_ORIGINAL}, ${SERVER_PATH}
+		  FROM ${TABLE_NAME}
+		 WHERE ${FILE_ID} = #{atchFileSn}
+		   AND ROWNUM = 1
+	</select>
+	
+	<!-- 파일 정보 DB 입력 -->
+	<insert id="uploadFileData" parameterType="egovMap">
+		INSERT INTO ${TABLE_NAME}
+		( ${FILE_ID}, ${ATTACHMENT}, ${ATTACHMENT_ORIGINAL}, ${SERVER_PATH}
+		, ${WRITE_TIME}, ${CONTENTS_ID})
+		values(
+		  ${SEQ_INDEX}, #{attachment}, #{attachmentOriginal}, #{serverPath}
+		, TO_CHAR(SYSDATE, 'YYYYMMDDhhmiss'), #{contentsId}
+		)
+	</insert>
+	<insert id="uploadQnaFileData" parameterType="egovMap">
+		INSERT INTO CONTENTS_INFO_QNA_FILE
+		( FILE_ID, ATTACHMENT, ATTACHMENT_ORIGINAL, SERVER_PATH
+		, WRITE_TIME, CONTENTS_ID, REPLY_TYPE )
+		values(
+		  SQ_QNAFILEID_INDEX.NEXTVAL, #{attachment}, #{attachmentOriginal}, #{serverPath}
+		, TO_CHAR(SYSDATE, 'YYYYMMDDhhmiss'), #{contentsId}, #{replyType}
+		)
+	</insert>
+	
+	<!-- 파일 정보 DB 삭제 -->
+	<delete id="deleteFileData" parameterType="egovMap" >
+		DELETE ${TABLE_NAME}
+		WHERE ${FILE_ID} = #{atchFileSn}
+	</delete>
+
+</mapper>

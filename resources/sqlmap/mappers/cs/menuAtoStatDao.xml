@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cs.menuStat">
+
+  <!-- 메뉴 접속통계 목록 조회 -->
+  <select id="pvList"  parameterType="egovMap" resultType="egovMap">
+	SELECT MENU_URL, MENU_NM, CNT
+	FROM	  	
+		(
+			SELECT MENU_URL, MENU_NM, COUNT(*) CNT 
+		  	FROM  (
+			    SELECT mn.menu_url
+			    	 , mn.menu_nm
+				FROM TB_HP_PV_LOG LOG
+				INNER JOIN tb_hp_pv_log_menu mn ON (mn.use_yn = 'Y' 
+											and LOG.url like '%'||mn.menu_url)
+	  	<if test='searchType == "2"'>
+		  	<choose><when test='searchMonth != null and searchMonth != ""'>
+			  	WHERE TO_CHAR(REG_DATE, 'yyyyMM') = #{searchDate} 
+		  	</when><otherwise>
+			  	WHERE TO_CHAR(REG_DATE, 'yyyy') = #{searchYear} 
+		  	</otherwise></choose>
+		</if>
+		<if test='searchType == "3"'>
+			  	WHERE TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ >= ]]> replace(#{searchFromDate},'-','')  
+			  	AND TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ <= ]]> replace(#{searchToDate},'-','') 
+		</if>
+                )
+		  	GROUP BY MENU_URL, MENU_NM
+        )
+	ORDER BY CNT DESC
+  </select>
+  <!-- <select id="pvList"  parameterType="egovMap" resultType="egovMap">
+  	SELECT mn.menu_nm, mn.menu_url, TBL.url, CNT 
+	FROM 
+	  	(
+		  	SELECT URL, COUNT(*) CNT 
+		  	FROM TB_HP_PV_LOG 
+	  	<if test='searchType == "2"'>
+		  	<choose><when test='searchMonth != null and searchMonth != ""'>
+			  	WHERE TO_CHAR(REG_DATE, 'yyyyMM') = #{searchDate} 
+		  	</when><otherwise>
+			  	WHERE TO_CHAR(REG_DATE, 'yyyy') = #{searchYear} 
+		  	</otherwise></choose>
+		</if>
+		<if test='searchType == "3"'>
+		  	WHERE TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ >= ]]> #{searchFromDate} 
+		  	AND TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ <= ]]> #{searchToDate}
+		</if>
+		  	GROUP BY URL
+	  	) TBL 
+	INNER JOIN EPTN_MENU mn on (mn.use_type = 'HP' 
+								and TBL.url like '%'||mn.menu_url)
+	ORDER BY CNT DESC
+  </select> -->
+  <!-- <select id="pvList"  parameterType="egovMap" resultType="egovMap">
+  	SELECT URL, CNT FROM 
+	  	(
+		  	SELECT URL, COUNT(*) CNT 
+		  	FROM TB_HP_PV_LOG 
+		  	WHERE TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ >= ]]> #{searchFromDate} 
+		  	AND TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ <= ]]> #{searchToDate}
+		  	GROUP BY URL
+	  	) TBL 
+  	ORDER BY CNT DESC
+  </select> -->
+	
+	<!-- 통계메뉴 설정 목록 조회 -->
+	<select id="pvMenuList"  parameterType="egovMap" resultType="egovMap">
+		SELECT * FROM (
+			SELECT ROWNUM AS RNUM,
+			aa.*
+			FROM (
+			    SELECT seq, menu_url, menu_nm, cntnts_yn, use_yn
+					 , COUNT(*) OVER() AS TOTAL_COUNT 
+		 		FROM tb_hp_pv_log_menu
+		 		WHERE 1=1
+				<if test = 'searchStr != null and searchStr != ""'>
+					<choose>
+						<when test = 'searchId == "1"'>
+							AND menu_nm LIKE '%' || #{searchStr } || '%'
+						</when>
+						<when test = 'searchId == "2"'>
+							AND menu_url LIKE '%' || #{searchStr } || '%'
+						</when>
+						<otherwise>
+							AND (  menu_nm LIKE '%' || #{searchStr } || '%'
+								OR menu_url LIKE '%' || #{searchStr } || '%')
+						</otherwise>
+					</choose>
+				</if>
+		 		ORDER BY seq DESC 
+			) AS aa
+		)
+		WHERE 1=1
+		AND RNUM BETWEEN #{START } AND #{END }
+	</select>
+  
+	<!-- 통계메뉴 설정 상세 -->
+	<select id="pvMenuDetail" parameterType="egovMap" resultType="egovMap">
+		SELECT seq, menu_url, menu_nm, cntnts_yn, use_yn
+ 		FROM tb_hp_pv_log_menu
+ 		where seq = #{seq}
+	</select>
+	
+	<!-- 게시글 수정 -->
+	<update id="update" parameterType="egovMap">
+		UPDATE tb_hp_pv_log_menu
+		SET
+			menu_url = #{menuUrl },
+			menu_nm = #{menuNm },
+			use_yn = #{useYn }
+		WHERE seq = #{seq }
+	</update>
+
+	<!-- 게시글 등록 -->
+	<insert id="insert" parameterType="egovMap">
+		<selectKey keyProperty="seqIdx" resultType="integer" order="AFTER">
+			SELECT max(seq)+1 FROM tb_hp_pv_log_menu
+		</selectKey>
+		INSERT INTO tb_hp_pv_log_menu (
+			seq,
+			menu_url,
+			menu_nm,
+			cntnts_yn,
+			use_yn
+		)
+		VALUES (
+			#{seqIdx },
+			#{menuUrl },
+			#{menuNm },
+			'N',
+			'Y'
+		)
+	</insert>
+
+	<!-- 게시글 삭제 -->	
+	<delete id="delete" parameterType="egovMap">
+		DELETE FROM tb_hp_pv_log_menu
+		WHERE seq = #{seq }
+	</delete>
+	
+	<!-- 컨텐츠 공유/비공유 여부 수정 -->
+	<update id="updateUseYn" parameterType="egovMap">
+		UPDATE tb_hp_pv_log_menu
+		SET use_yn = #{isOpen }
+		WHERE seq IN
+ 		<foreach collection="contentsIdList" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	
+  
+</mapper>

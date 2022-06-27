@@ -1,0 +1,104 @@
+@charset "utf-8";
+/*smartphones ( portrait )*/
+@media screen and (max-width:320px){
+.header_title{font-size:15px; letter-spacing: -0.06em}
+    
+.main_img{flex-basis: 180px; background: url(../../images/main_img.png) center top 0 no-repeat; background-size: auto 160px}
+    
+.main_mileage{padding:0 16px 12px}
+.main_mileage li{font-size:18px}
+.main_mileage li span.subject{display: block; font-size: 13px; padding-bottom: 6px }
+.main_btn{flex-basis: 90px}
+.main_btn a.btn_suggest{left:2%; width:70px; height: 70px; border-radius: 70px}
+.main_btn a.btn_save{right:3%; width:90px; height: 90px; border-radius: 90px}
+
+/** sub **/
+.maileage_tab li span.walk{height: 130px}
+.maileage_tab li span.bicycle{height: 130px}
+
+.maileage_check{padding:0 0 0}
+.maileage_check li.on span.btn01{background-size:auto 124px;background-position: right top -10px}
+.maileage_check li.on span.btn02{background-size:auto 124px;background-position: right top -10px}
+.maileage_check li.on span.btn03{background-size:auto 124px;background-position: right top -10px}
+.maileage_check li.on span.btn04{background-size:auto 124px;background-position: right top -10px}
+
+.maileage_check span.btn01,.maileage_check span.btn02,.maileage_check span.btn03,.maileage_check span.btn04{height:114px}
+.maileage_check span.btn01{background-size:auto 124px; background-position: right top -10px}
+.maileage_check span.btn02{background-size:auto 124px;background-position: left top -10px}
+.maileage_check span.btn03{background-size:auto 124px;background-position: left top -10px}
+.maileage_check span.btn04{background-size:auto 124px;background-position: right top -10px}
+    
+.active_area li{flex-basis: 126px; min-height:170px;}
+.active_area span.t1{font-size:11px}
+.active_area span.t2{flex-basis: 28px}
+.active_area span.t2 sub{letter-spacing: -0.05em}
+.active_area span.t3{flex-basis: 25px; font-size:11px}
+}
+
+@media screen and (min-width:401px) and (max-width: 420px){
+/** main **/
+.main_img{flex-basis: 320px; background: url(../../images/main_img.png) center top 27px no-repeat; background-size: contain}
+.main_mileage li{font-size:28px}
+.main_mileage li span.subject{padding-bottom: 7px }
+.main_btn{flex-basis: 120px}
+.main_btn a.btn_suggest{left:2%; width:90px; height: 90px; border-radius: 90px}
+.main_btn a.btn_save{right:3%; width:120px; height: 120px; border-radius: 120px}
+
+/** sub **/
+.maileage_tab li span.walk{height: 198px}
+.maileage_tab li span.bicycle{height: 198px}
+
+.maileage_check{padding:12px 8% 0}
+
+.maileage_check li.on span.btn01{background-size:auto 168px}
+.maileage_check li.on span.btn02{background-size:auto 168px}
+.maileage_check li.on span.btn03{background-size:auto 168px}
+.maileage_check li.on span.btn04{background-size:auto 168px}
+
+.maileage_check span.btn01,.maileage_check span.btn02,.maileage_check span.btn03,.maileage_check span.btn04{height:154px}
+.maileage_check span.btn01{background-size:auto 168px}
+.maileage_check span.btn02{background-size:auto 168px}
+.maileage_check span.btn03{background-size:auto 168px}
+.maileage_check span.btn04{background-size:auto 168px}
+}
+
+@media screen and (min-width:421px) and (max-width: 1024px){
+.main_img{flex-basis: 580px; background: url(../../images/main_img.png) center top 90px no-repeat; background-size: auto 416px}
+.main_mileage{padding:0 20px 48px}
+.main_mileage li{font-size:32px}
+.main_mileage li span.subject{display: block; font-size: 16px; padding-bottom: 10px }
+.main_btn{flex-basis: 120px}
+.main_btn a.btn_suggest{left:10%; width:90px; height: 90px; border-radius: 90px}
+.main_btn a.btn_save{right:8%; width:120px; height: 120px; border-radius: 120px}
+
+/** sub **/
+.maileage_tab{margin:60px 0 40px}
+.maileage_tab li span.walk{height: 230px}
+.maileage_tab li span.bicycle{height: 230px}
+
+.maileage_check{padding:12px 8% 0}
+
+.maileage_check li.on span.btn01{background-size:auto 220px}
+.maileage_check li.on span.btn02{background-size:auto 220px}
+.maileage_check li.on span.btn03{background-size:auto 220px}
+.maileage_check li.on span.btn04{background-size:auto 220px}
+
+.maileage_check span.btn01,.maileage_check span.btn02,.maileage_check span.btn03,.maileage_check span.btn04{height:206px}
+.maileage_check span.btn01{background-size:auto 220px}
+.maileage_check span.btn02{background-size:auto 220px}
+.maileage_check span.btn03{background-size:auto 220px}
+.maileage_check span.btn04{background-size:auto 220px}
+    
+.active_area li{flex-basis: 240px; flex-grow:1; min-height:360px}
+.active_area span.title{flex-basis: 50px; font-size:16px; padding:24px 0 0}
+.active_area span.active_img1,.active_area span.active_img2,.active_area span.active_img3,.active_area span.active_img4{flex-basis: auto; flex-shrink: 0; flex-grow: 1;}
+.active_area span.active_img1{background: url(../../images/my_ani01.gif) center no-repeat; background-size:contain}
+.active_area span.active_img2{background: url(../../images/my_ani02.gif) center no-repeat; background-size:contain}
+.active_area span.active_img3{background: url(../../images/my_ani03.gif) center no-repeat; background-size:contain}
+.active_area span.active_img4{background: url(../../images/my_ani04.gif) center no-repeat; background-size:contain}
+.active_area span.t1{flex-basis: 52px; font-size:14px; letter-spacing: -0.075em; line-height: 1.5em; color: #777}
+.active_area span.t2{flex-basis: 40px}
+.active_area span.t2 sub{display: inline-block; font-size:18px; line-height: 1.25em; }
+.active_area span.t3{flex-basis: 40px; font-size:13px; letter-spacing: -0.05em}
+    
+}

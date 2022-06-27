@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cmmn">
+
+	<!-- 통계 제작사 목록 조회 -->
+	<select id="selectPrdctList" parameterType="egovMap" resultType="egovMap">
+		SELECT PAGING.* 
+			 , COUNT(*) OVER() AS TOTAL_COUNT
+		  FROM ( 
+				SELECT  subcode, code_value, etc_value4, 
+						case
+							when etc_value4 = 1 then '자동차'
+							when etc_value4 = 2 then '이륜자동차'
+							else '기타'
+						end AS category
+				FROM common_code
+				WHERE is_using = 'Y'
+				AND maincode = 'VI1'
+				<if test='srchCategory != null and srchCategory != ""'>
+					<choose>
+					<when test='srchCategory == "3"'>
+				AND etc_value4 is null
+					</when>
+					<otherwise>
+				AND etc_value4 = #{srchCategory}
+					</otherwise>
+					</choose>
+				</if>
+				<if test='srchWrd != null and srchWrd != ""'>
+				AND code_value LIKE '%' || UPPER(#{srchWrd }) || '%'
+				</if>
+				ORDER BY subcode 
+			) PAGING 
+		LIMIT #{startNum}, #{recordCount}
+	</select>
+
+				<!-- <if test='statsFlag != null and statsFlag != ""'>
+                AND subcode IN
+                (
+					<if test='statsFlag == "R"'>
+					SELECT distinct(original_make_code)
+                	FROM RECALL_INFO
+					</if>
+					<if test='statsFlag == "S"'>
+					SELECT distinct(b.maker_code) AS subcode
+	                FROM EPTN_PETITION a, vehicle_info b
+	                WHERE a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID
+					</if>
+				)
+				</if> -->
+				
+</mapper>

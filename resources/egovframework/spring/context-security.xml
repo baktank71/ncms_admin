@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+             http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+             http://www.springframework.org/schema/security
+             http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+  <http pattern="/cmmn/**" security="none"/>
+  <http pattern="/css/**" security="none"/>
+  <http pattern="/fonts/**" security="none"/>
+  <http pattern="/images/**" security="none"/>
+  <http pattern="/js/**" security="none"/>
+  <http pattern="/vendor/**" security="none"/>
+  <http pattern="/ext/**" security="none"/>
+  <http pattern="/userFiles/**" security="none"/>
+  <http pattern="/favicon.ico" security="none"/>
+
+  <http auto-config="true" use-expressions="true" create-session="never">
+    <access-denied-handler error-page="/om/login"/>
+
+    <intercept-url pattern="/om/login" access="permitAll"/>
+    <intercept-url pattern="/om/denied" access="permitAll"/>    
+    
+    <!--<intercept-url pattern="/om/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/am/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/cmmn/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/di/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/em/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/ga/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/js/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/mf/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/si/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/**" access="hasRole('ROLE_ADMIN')"/>
+    <intercept-url pattern="/" access="hasRole('ROLE_ADMIN')"/>
+    -->
+
+    <form-login login-page="/om/login"
+                login-processing-url="/loginProcess"
+                authentication-success-handler-ref="loginSuccessHandler"
+                authentication-failure-handler-ref="loginFailureHandler"
+                username-parameter="mbId"
+                password-parameter="mbPw"
+     />
+
+    <logout logout-url="/logout"
+            logout-success-url="/om/login"
+            invalidate-session="true"
+            delete-cookies="JSESSIONID"/>
+
+    <csrf/>
+  </http>
+
+  <!-- secured method -->
+  <global-method-security secured-annotations="enabled"/>
+
+  <!-- provider -->
+  <authentication-manager>
+    <authentication-provider user-service-ref="jdbcUserService">
+      <!--      <password-encoder base64="true" ref="plsPasswordEncoder"/>-->
+    </authentication-provider>
+  </authentication-manager>
+
+  <beans:bean id="jdbcUserService" class="egovframework.rte.fdl.security.userdetails.jdbc.EgovJdbcUserDetailsManager">
+    <beans:property name="usersByUsernameQuery"
+                    value="SELECT mb_id AS userId
+                                , mb_name AS userNm
+                                , mb_password AS userPw
+                                , mb_level AS mbLevel
+                                , 'ROLE_ADMIN' AS authority
+                             FROM member
+                            WHERE mb_id = ?"/>
+	<beans:property name="authoritiesByUsernameQuery"
+	                    value="SELECT mb_id AS userId
+								   , 'ROLE_ADMIN' AS authority
+	        			       FROM member
+					          WHERE mb_id = ?"/>                            
+    <beans:property name="roleHierarchy" ref="roleHierarchy"/>
+    <beans:property name="dataSource" ref="dataSource"/>
+    <beans:property name="mapClass" value="ts.ncms.ad.cmmn.security.UserDetailMapping"/>
+  </beans:bean>
+
+  <beans:bean id="loginSuccessHandler" class="ts.ncms.ad.cmmn.security.LoginSuccessHandler">
+    <beans:property name="defaultTargetUrl" value="/om/main"/>
+    <beans:property name="alwaysUseDefaultTargetUrl" value="false"/>
+  </beans:bean>
+
+  <beans:bean id="loginFailureHandler" class="ts.ncms.ad.cmmn.security.LoginFailureHandler">
+    <!-- <beans:property name="defaultFailureUrl" value="/om/login?error=1" />  -->
+  </beans:bean>
+
+  <!-- 기본 권한 정보 설정 -->
+  <beans:bean id="roleHierarchy" class="org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl">
+    <beans:property name="hierarchy">
+      <beans:value>
+        ROLE_ADMIN > ROLE_USER
+      </beans:value>
+    </beans:property>
+  </beans:bean>
+
+
+</beans:beans>

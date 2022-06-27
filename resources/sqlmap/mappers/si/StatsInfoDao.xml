@@ -1,0 +1,990 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="si.statsInfo">
+
+	<!-- 통계관리 목록 조회 -->
+	<select id="statsManageList" parameterType="egovMap" resultType="egovMap">
+	 	SELECT USE_TYPE, STATS_MANAGE_NO, STATS_TITL, STATS_URL, IS_OPEN
+	 	FROM TB_STATS_MANAGE_YN 
+	 	<choose><when test='useType != null and useType != ""'>
+	 	WHERE USE_TYPE = #{useType}
+	 	</when><otherwise>
+	 	WHERE USE_TYPE = 'HP'
+	 	</otherwise>
+	 	</choose>
+	 	ORDER BY STATS_MANAGE_NO
+	</select>
+  
+	<!-- 통계관리 공개/비공개 여부 수정 -->
+	<update id="updateOpenYn" parameterType="egovMap">
+		UPDATE TB_STATS_MANAGE_YN
+		SET IS_OPEN = #{isOpen }
+		WHERE USE_TYPE = #{useType }
+		AND STATS_MANAGE_NO IN
+ 		<foreach collection="contentsIdList" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+  
+	<!-- 하자목록 조회 -->
+	<select id="psList" resultType="egovMap">
+		SELECT petition_style_name value, petition_style_name text 
+		  FROM eptn_petition_style_oper 
+		 WHERE is_using='Y' 
+		 ORDER by petition_style_name	 
+	</select>
+	
+	<!-- 리콜대상년도조회 -->		
+	<select id="yearList" resultType="egovMap">
+		SELECT SUBSTR(RECALL_MNG_NO,1,4) AS YEAR 
+          FROM TB_RECALL_CRCT_MAPP   
+		 GROUP BY SUBSTR(RECALL_MNG_NO,1,4)
+		 ORDER BY SUBSTR(RECALL_MNG_NO,1,4) DESC
+	</select>
+
+	<!-- 월별, 연도별 리콜통계현황 -->
+	<select id="rcList" parameterType="egovMap" resultType="egovMap">
+		SELECT recall_date_from, sum(kor_product_cnt) kor_product_cnt, sum(kor_daesu) kor_daesu, sum(for_product_cnt) for_product_cnt, sum(for_daesu) for_daesu, sum(product_name_cnt) tot_product_cnt, sum(daesu) tot_daesu    
+		FROM (
+			SELECT recall_date_from, nation_code, (case when nation_code = '100' then sum(product_cnt) else 0 end) kor_product_cnt, (case when nation_code = '100' then sum(cnt) else 0 end) kor_daesu, (case when nation_code <![CDATA[<>]]> '100' then sum(product_cnt) else 0 end) for_product_cnt, (case when nation_code <![CDATA[<>]]> '100' then sum(cnt) else 0 end) for_daesu, sum(product_cnt) product_name_cnt, sum(cnt) daesu    
+			FROM ( 
+				SELECT recall_date_from, product_cnt, nation_code, recall_car_count cnt    
+				FROM (
+					SELECT 
+					<choose><when test ='rcType == "Y"'>
+						SUBSTR(recall_date_from, 1,4) AS recall_date_from 
+					</when><otherwise>
+						recall_date_from
+					</otherwise></choose>
+						, product_cnt, recall_car_count, nation_code
+					FROM VW_RECALL_INFO V1
+					WHERE recall_date_from <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYY-MM')
+				<choose><when test ='rcType != "Y"'>
+					<if test='recallYear != null and recallYear != ""'>
+					AND substr(V1.recall_date_from, 1,4) = #{recallYear}
+					</if>
+				</when><otherwise>
+					<if test='recallYear != null and recallYear != ""'>
+					AND substr(V1.recall_date_from, 1,4) <![CDATA[>=]]> #{recallYear}
+					</if>
+					<if test='recallToYear != null and recallToYear != ""'>
+					AND substr(V1.recall_date_from, 1,4) <![CDATA[<=]]> #{recallToYear}
+					</if>
+				</otherwise></choose> 
+				<if test ='organ != null'>
+					<choose>
+						<when test='organ == "1"'>AND RECALL_SE_CD = 'RECALL'</when>
+						<when test='organ == "2"'>AND RECALL_SE_CD = 'ME'</when>
+						<when test='organ == "0"'>AND RECALL_SE_CD in ('RECALL', 'ME')</when>
+						<otherwise>AND RECALL_SE_CD in ('RECALL', 'ME')</otherwise>
+					</choose>
+				</if>
+				)
+				ORDER BY recall_date_from DESC
+			)
+			GROUP BY recall_date_from, nation_code 
+		)	
+		GROUP BY recall_date_from 		
+		ORDER BY recall_date_from desc
+	</select>
+	
+	<!-- 제작사 리콜통계현황 -->
+	<select id="mkList" parameterType="egovMap" resultType="egovMap">
+		SELECT  recall_date_from, maker_code, maker_name||car_type as maker_name
+		      , SUM(cnt) AS recall_car_count
+		FROM
+		(
+			SELECT T1.ORIGINAL_MAKE_CODE maker_code,
+            	DECODE(S1.ETC_VALUE4,'2','(이륜)','') AS CAR_TYPE,
+		        S1.code_value maker_name, V1.recall_car_count AS cnt,
+			<choose><when test ='rcType == "Y"'>
+				SUBSTR(V1.recall_date_from, 1,4) AS recall_date_from 
+			</when><otherwise>
+				V1.recall_date_from
+			</otherwise></choose>
+			  FROM VW_RECALL_INFO V1, RECALL_INFO T1
+			  LEFT OUTER JOIN common_code S1 on ( S1.maincode = 'VI1'
+			           								and S1.subcode = T1.ORIGINAL_MAKE_CODE )
+			 WHERE V1.recall_id = T1.recall_id 
+			 AND V1.recall_date_from <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYY-MM')
+			<choose><when test ='rcType != "Y"'>
+				<if test='recallYear != null and recallYear != ""'>
+				AND substr(V1.recall_date_from, 1,4) = #{recallYear}
+				</if>
+			</when><otherwise>
+				<if test='recallYear != null and recallYear != ""'>
+				AND substr(V1.recall_date_from, 1,4) <![CDATA[>=]]> #{recallYear}
+				</if>
+				<if test='recallToYear != null and recallToYear != ""'>
+				AND substr(V1.recall_date_from, 1,4) <![CDATA[<=]]> #{recallToYear}
+				</if>
+			</otherwise></choose> 
+			<if test ='organ != null'>
+				<choose>
+					<when test='organ == "1"'>AND V1.RECALL_SE_CD = 'RECALL'</when>
+					<when test='organ == "2"'>AND V1.RECALL_SE_CD = 'ME'</when>
+					<when test='organ == "0"'>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</when>
+					<otherwise>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</otherwise>
+				</choose>
+			</if>
+		)	
+	    group by recall_date_from, maker_code, maker_name, car_type
+		order by maker_code, recall_date_from desc
+	</select>
+	
+	<!-- 제작사 리콜차트현황(top5) -->
+	<select id="mkChartList" parameterType="egovMap" resultType="egovMap">
+	SELECT maker_code, maker_name||car_type as maker_name, recall_car_count
+    FROM
+    (
+		SELECT  maker_code, maker_name, car_type
+		      , SUM(cnt) AS recall_car_count
+		FROM
+		(
+			SELECT T1.ORIGINAL_MAKE_CODE maker_code,
+            	DECODE(S1.ETC_VALUE4,'2','(이륜)','') AS CAR_TYPE,
+		       	S1.code_value maker_name, V1.recall_car_count AS cnt,
+			<choose><when test ='rcType == "Y"'>
+				SUBSTR(V1.recall_date_from, 1,4) AS recall_date_from 
+			</when><otherwise>
+				V1.recall_date_from
+			</otherwise></choose>
+			  FROM VW_RECALL_INFO V1, RECALL_INFO T1 
+			  LEFT OUTER JOIN common_code S1 on ( S1.maincode = 'VI1'
+			           								and S1.subcode = T1.ORIGINAL_MAKE_CODE )
+			 WHERE V1.recall_id = T1.recall_id 
+			 AND V1.recall_date_from <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYY-MM')
+			<choose><when test ='rcType != "Y"'>
+				<if test='recallYear != null and recallYear != ""'>
+				AND substr(V1.recall_date_from, 1,4) = #{recallYear}
+				</if>
+			</when><otherwise>
+				<if test='recallYear != null and recallYear != ""'>
+				AND substr(V1.recall_date_from, 1,4) <![CDATA[>=]]> #{recallYear}
+				</if>
+				<if test='recallToYear != null and recallToYear != ""'>
+				AND substr(V1.recall_date_from, 1,4) <![CDATA[<=]]> #{recallToYear}
+				</if>
+			</otherwise></choose> 
+			<if test ='organ != null'>
+				<choose>
+					<when test='organ == "1"'>AND V1.RECALL_SE_CD = 'RECALL'</when>
+					<when test='organ == "2"'>AND V1.RECALL_SE_CD = 'ME'</when>
+					<when test='organ == "0"'>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</when>
+					<otherwise>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</otherwise>
+				</choose>
+			</if>
+			<if test ='carType == "KOR"'>
+				AND V1.nation_code = '100'
+			</if> 
+			<if test ='carType == "FOR"'>
+				AND V1.nation_code <![CDATA[ <> ]]> '100'
+			</if> 
+		)	
+	    group by maker_code, maker_name, car_type
+    )
+    order by recall_car_count desc
+    limit 5 
+	</select>
+		
+	<!-- 월별/연도별 장치분류 리콜통계현황 -->
+	<select id="pdList" parameterType="egovMap" resultType="egovMap">
+		SELECT recall_date_from , division_cd, division_name, sum(recall_car_count) as recall_car_count
+		from(
+				SELECT recall_date_from , recall_car_count
+					  , a.division1 AS division_cd, division_name
+				FROM (
+						SELECT 
+						<choose><when test ='rcType == "Y"'>
+							SUBSTR(V1.recall_date_from, 1,4) AS recall_date_from 
+						</when><otherwise>
+							V1.recall_date_from
+						</otherwise></choose>
+							, S1.division1, V1.recall_car_count
+			  			FROM VW_RECALL_INFO V1, RECALL_INFO T1 
+						INNER JOIN eptn_petition_division_oper S1 on S1.PETITION_DIVISION_CODE = T1.PETITION_DIVISION_CODE
+						WHERE V1.recall_id = T1.recall_id 
+						AND V1.recall_date_from <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYY-MM')
+						<choose><when test ='rcType != "Y"'>
+							<if test='recallYear != null and recallYear != ""'>
+							AND substr(V1.recall_date_from, 1,4) = #{recallYear}
+							</if>
+						</when><otherwise>
+							<if test='recallYear != null and recallYear != ""'>
+							AND substr(V1.recall_date_from, 1,4) <![CDATA[>=]]> #{recallYear}
+							</if>
+							<if test='recallToYear != null and recallToYear != ""'>
+							AND substr(V1.recall_date_from, 1,4) <![CDATA[<=]]> #{recallToYear}
+							</if>
+						</otherwise></choose> 
+						<if test ='organ != null'>
+							<choose>
+								<when test='organ == "1"'>AND V1.RECALL_SE_CD = 'RECALL'</when>
+								<when test='organ == "2"'>AND V1.RECALL_SE_CD = 'ME'</when>
+								<when test='organ == "0"'>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</when>
+								<otherwise>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</otherwise>
+							</choose>
+						</if>
+				) a ,
+                ( select division1, division_name from eptn_petition_division_oper
+                   where division2 = 0 
+                   group by division1, division_name
+                ) b
+				WHERE b.division1 = a.division1
+		)
+		group by recall_date_from, division_cd, division_name
+		order by division_cd, recall_date_from desc
+	</select>
+	
+	<!-- 월별/연도별 장치분류 리콜차트현황(top5) -->
+	<select id="pdChartList" parameterType="egovMap" resultType="egovMap">
+    SELECT division_cd, division_name, recall_car_count
+    from(
+		SELECT division_cd, division_name, sum(recall_car_count) as recall_car_count
+		from(
+				SELECT recall_date_from , recall_car_count
+					  , a.division1 AS division_cd, division_name
+				FROM (
+						SELECT 
+					<choose><when test ='rcType == "Y"'>
+						SUBSTR(V1.recall_date_from, 1,4) AS recall_date_from 
+					</when><otherwise>
+						V1.recall_date_from
+					</otherwise></choose>
+						, S1.division1, V1.recall_car_count
+		  			FROM VW_RECALL_INFO V1, RECALL_INFO T1 
+					INNER JOIN eptn_petition_division_oper S1 on S1.PETITION_DIVISION_CODE = T1.PETITION_DIVISION_CODE
+					WHERE V1.recall_id = T1.recall_id 
+					AND V1.recall_date_from <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYY-MM')
+					<choose><when test ='rcType != "Y"'>
+						<if test='recallYear != null and recallYear != ""'>
+						AND substr(V1.recall_date_from, 1,4) = #{recallYear}
+						</if>
+					</when><otherwise>
+						<if test='recallYear != null and recallYear != ""'>
+						AND substr(V1.recall_date_from, 1,4) <![CDATA[>=]]> #{recallYear}
+						</if>
+						<if test='recallToYear != null and recallToYear != ""'>
+						AND substr(V1.recall_date_from, 1,4) <![CDATA[<=]]> #{recallToYear}
+						</if>
+					</otherwise></choose> 
+					<if test ='organ != null'>
+						<choose>
+							<when test='organ == "1"'>AND V1.RECALL_SE_CD = 'RECALL'</when>
+							<when test='organ == "2"'>AND V1.RECALL_SE_CD = 'ME'</when>
+							<when test='organ == "0"'>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</when>
+							<otherwise>AND V1.RECALL_SE_CD in ('RECALL', 'ME')</otherwise>
+						</choose>
+					</if>
+					<if test ='carType == "KOR"'>
+						AND V1.nation_code = '100'
+					</if> 
+					<if test ='carType == "FOR"'>
+						AND V1.nation_code <![CDATA[ <> ]]> '100'
+					</if> 
+				) a ,
+                ( select division1, division_name from eptn_petition_division_oper
+                   where division2 = 0 
+                   group by division1, division_name
+                ) b
+				WHERE b.division1 = a.division1
+		)
+		group by division_cd, division_name
+    )
+    ORDER BY recall_car_count DESC
+    LIMIT 5
+	</select>
+	
+	<!-- 제작사-차종별(차명) 리콜통계현황 -->
+	<select id="cgList" parameterType="egovMap" resultType="egovMap">
+		SELECT  t1.maker_reg_no
+			, (SELECT maker_nm FROM docs.tb_maker tm WHERE tm.maker_reg_no = t1.maker_reg_no LIMIT 1) maker_nm 
+			, t2.group_car_name 
+			<choose><when test ='rcType == "Y"'>
+      		, substr(min(mng_doc_no), 1,4) as recall_date_from
+			</when><otherwise>
+      		, substr(min(mng_doc_no), 1,4)||'-'|| substr(min(recall_begin_dt), 5,2) as recall_date_from
+			</otherwise></choose>
+			, sum(t2.car_cnt) recall_car_count
+			, sum(t2.fnl_crct_cnt) fnl_crct_cnt
+			, NVL(round(sum(t2.fnl_crct_cnt)/sum(t2.car_cnt)*100, 2),0) rate 
+		FROM docs.tb_crct t1, docs.tb_crct_car t2 
+		WHERE t1.crct_plan_seq = t2.crct_plan_seq
+		  AND t1.crct_plan_dgr = t2.crct_plan_dgr
+		  AND t1.sbmt_fnl_yn = 'Y' 
+		  AND t1.maker_reg_no = #{makerCode}
+	  	  AND EXISTS ( SELECT 'x'
+		  				 FROM tb_recall_crct_mapp ta1 , recall_info ta2
+		  				WHERE ta1.recall_id = ta2.recall_id
+		  				  AND t1.crct_plan_seq = ta1.crct_plan_seq 
+		  				  AND TO_CHAR(ta2.recall_date_from,'YYYY-MM') <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYY-MM')
+					<choose><when test ='rcType != "Y"'>
+						<if test='recallYear != null and recallYear != ""'>
+						AND TO_CHAR(ta2.recall_date_from, 'yyyy') = #{recallYear}
+						</if>
+					</when><otherwise>
+						<if test='recallYear != null and recallYear != ""'>
+						AND TO_CHAR(ta2.recall_date_from, 'yyyy') <![CDATA[>=]]> #{recallYear}
+						</if>
+						<if test='recallToYear != null and recallToYear != ""'>
+						AND TO_CHAR(ta2.recall_date_from, 'yyyy') <![CDATA[<=]]> #{recallToYear}
+						</if>
+					</otherwise></choose>
+					<if test ='organ != null'>
+						<choose>
+							<when test='organ == "1"'>AND ta2.RECALL_SE_CD = 'RECALL'</when>
+							<when test='organ == "2"'>AND ta2.RECALL_SE_CD = 'ME'</when>
+							<otherwise>AND ta2.RECALL_SE_CD in ('RECALL', 'ME')</otherwise>
+						</choose>
+					</if>
+		  				LIMIT 1) 
+		GROUP BY t1.maker_reg_no, t2.group_car_name  
+		ORDER BY 1, 3, 4 desc
+	</select>
+	
+	<!-- 제작사-차종별(차명) 리콜차트현황(top5) -->
+	<select id="cgChartList" parameterType="egovMap" resultType="egovMap">
+		SELECT t2.group_car_name 
+			, sum(t2.car_cnt) recall_car_count 
+		FROM docs.tb_crct t1, docs.tb_crct_car t2 
+		WHERE t1.crct_plan_seq = t2.crct_plan_seq
+		  AND t1.crct_plan_dgr = t2.crct_plan_dgr
+		  AND t1.sbmt_fnl_yn = 'Y' 
+		  AND t1.maker_reg_no = #{makerCode}
+	  	  AND EXISTS ( SELECT 'x'
+		  				 FROM tb_recall_crct_mapp ta1 , recall_info ta2
+		  				WHERE ta1.recall_id = ta2.recall_id
+		  				  AND ta2.recall_se_cd = 'RECALL'
+		  				  AND t1.crct_plan_seq = ta1.crct_plan_seq 
+		  				  AND TO_CHAR(ta2.recall_date_from,'YYYY-MM') <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYY-MM')
+					<choose><when test ='rcType != "Y"'>
+						<if test='recallYear != null and recallYear != ""'>
+						AND TO_CHAR(ta2.recall_date_from, 'yyyy') = #{recallYear}
+						</if>
+					</when><otherwise>
+						<if test='recallYear != null and recallYear != ""'>
+						AND TO_CHAR(ta2.recall_date_from, 'yyyy') <![CDATA[>=]]> #{recallYear}
+						</if>
+						<if test='recallToYear != null and recallToYear != ""'>
+						AND TO_CHAR(ta2.recall_date_from, 'yyyy') <![CDATA[<=]]> #{recallToYear}
+						</if>
+					</otherwise></choose>
+					<if test ='organ != null'>
+						<choose>
+							<when test='organ == "1"'>AND ta2.RECALL_SE_CD = 'RECALL'</when>
+							<when test='organ == "2"'>AND ta2.RECALL_SE_CD = 'ME'</when>
+							<otherwise>AND ta2.RECALL_SE_CD in ('RECALL', 'ME')</otherwise>
+						</choose>
+					</if>
+		  				LIMIT 1) 
+		GROUP BY t2.group_car_name  
+		ORDER BY 2 desc
+	    limit 5 
+	</select>
+	
+	<!-- year list(결함신고) -->
+	<select id="yearScList" resultType="egovMap">
+		SELECT YEAR
+        FROM
+        (	SELECT 
+				CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null then '2002'
+                 	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+                     ELSE SUBSTR(S1.acception_time, 1, 4)
+                 END AS year    
+			FROM PETITION_RECEIPT S1
+        )
+		GROUP BY year
+		ORDER BY year DESC
+	</select>
+
+	<!-- 월별/연도별 차량별 현황 리스트박스(결함신고) -->
+	<select id="rcScList" parameterType="egovMap" resultType="egovMap">
+		SELECT recall_date_from, sum(kor_daesu) kor_daesu, sum(for_daesu) for_daesu, sum(daesu) tot_daesu    
+		FROM ( 
+			SELECT recall_date_from, nation_code, (case when nation_code = '100' then sum(cnt) else 0 end) kor_daesu, (case when nation_code <![CDATA[<>]]> '100' then sum(cnt) else 0 end) for_daesu, sum(cnt) daesu    
+			FROM ( 
+				SELECT recall_date_from, nation_code, car_count cnt    
+				FROM (
+					SELECT 
+					<choose><when test ='rcType == "Y"'>
+						CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+                        	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+                        	 ELSE SUBSTR(S1.acception_time, 1, 4)
+                        END AS recall_date_from
+					</when><otherwise>
+						<choose><when test ='recallYear == "2002"'>
+						'2003-이전' AS recall_date_from
+						</when><otherwise>
+						TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+						</otherwise></choose>
+					</otherwise></choose>
+						, b.nation_code, 1 AS car_count    
+					FROM PETITION_RECEIPT S1, EPTN_PETITION a
+			  		LEFT OUTER JOIN vehicle_info b ON (a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID)
+					WHERE a.PETITION_ID = S1.PETITION_ID
+				<choose><when test ='rcType != "Y"'>
+					<if test='recallYear != null and recallYear != ""'>
+						<choose><when test ='recallYear == "2002"'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+						OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+						OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+						</when><otherwise>
+					AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+						</otherwise></choose>
+					</if>
+				</when><otherwise>
+					<if test='recallYear != null and recallYear != ""'>
+						<choose><when test ='recallYear == "2002"'>
+						AND (SUBSTR(S1.acception_time, 1, 4) is null 
+						OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+						OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+						</when><otherwise>
+						AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+						</otherwise></choose>
+					</if>
+					<if test='recallToYear != null and recallToYear != ""'>
+						AND (SUBSTR(S1.acception_time, 1, 4) is null 
+						OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+						OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+					</if>
+				</otherwise></choose>
+				)
+				ORDER BY recall_date_from DESC
+			)
+			GROUP BY recall_date_from, nation_code 
+		)	
+		GROUP BY recall_date_from 		
+		ORDER BY recall_date_from desc
+	</select>
+	
+	<!-- 연도별 제작사 통계현황(결함신고) -->
+	<select id="mkScList" parameterType="egovMap" resultType="egovMap">
+		SELECT  recall_date_from, maker_code, maker_name||car_type as maker_name
+		      , count(*) AS recall_car_count
+		FROM
+		(
+			SELECT b.maker_code, nvl(b1.code_value, '기타') AS maker_name,
+            	DECODE(b1.ETC_VALUE4,'2','(이륜)','') AS CAR_TYPE,
+			<choose><when test ='rcType == "Y"'>
+				CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+                   	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+                   	 ELSE SUBSTR(S1.acception_time, 1, 4)
+                END AS recall_date_from
+			</when><otherwise>
+				<choose><when test ='recallYear == "2002"'>
+				'2003-이전' AS recall_date_from
+				</when><otherwise>
+				TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+				</otherwise></choose>
+			</otherwise></choose> 
+			  FROM PETITION_RECEIPT S1, EPTN_PETITION a 
+			  LEFT OUTER JOIN vehicle_info b ON (a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID)
+			  LEFT OUTER JOIN common_code b1 on ( b1.maincode = 'VI1'
+			           and b1.subcode = b.maker_code )
+			 WHERE a.PETITION_ID = S1.PETITION_ID 
+			<choose><when test ='rcType != "Y"'>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+				AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+					</when><otherwise>
+				AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+					</otherwise></choose>
+				</if>
+			</when><otherwise>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+					</when><otherwise>
+					AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+					</otherwise></choose>
+				</if>
+				<if test='recallToYear != null and recallToYear != ""'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+				</if>
+			</otherwise></choose>
+		)	
+	    GROUP BY recall_date_from, maker_code, maker_name, car_type
+		ORDER BY maker_code, recall_date_from DESC
+	</select>
+	
+	<!-- 연도별 제작사 차트현황(top5)(결함신고) -->
+	<select id="mkChartScList" parameterType="egovMap" resultType="egovMap">
+	SELECT maker_code, maker_name||car_type as maker_name, recall_car_count
+    FROM
+    (
+		SELECT  maker_code, maker_name, car_type
+		      , count(*) AS recall_car_count
+		FROM
+		(
+			SELECT b.maker_code, nvl(b1.code_value, '기타') AS maker_name,
+            	DECODE(b1.ETC_VALUE4,'2','(이륜)','') AS CAR_TYPE,
+			<choose><when test ='rcType == "Y"'>
+				CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+                   	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+                   	 ELSE SUBSTR(S1.acception_time, 1, 4)
+                END AS recall_date_from
+			</when><otherwise>
+				<choose><when test ='recallYear == "2002"'>
+				'2003-이전' AS recall_date_from
+				</when><otherwise>
+				TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+				</otherwise></choose>
+			</otherwise></choose>
+			  FROM PETITION_RECEIPT S1, EPTN_PETITION a
+			  LEFT OUTER JOIN vehicle_info b ON (a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID)
+			  LEFT OUTER JOIN common_code b1 on ( b1.maincode = 'VI1'
+			           and b1.subcode = b.maker_code )
+			 WHERE a.PETITION_ID = S1.PETITION_ID 
+			<choose><when test ='rcType != "Y"'>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+				AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+					</when><otherwise>
+				AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+					</otherwise></choose>
+				</if>
+			</when><otherwise>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+					</when><otherwise>
+					AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+					</otherwise></choose>
+				</if>
+				<if test='recallToYear != null and recallToYear != ""'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+				</if>
+			</otherwise></choose>
+			<if test ='carType == "KOR"'>
+				AND b1.ETC_VALUE5 = '1'
+			</if> 
+			<if test ='carType == "FOR"'>
+				AND b1.ETC_VALUE5 = '2' 
+			</if> 
+		)	
+	    group by maker_code, maker_name, car_type
+    )
+    order by recall_car_count desc
+    limit 5
+	</select>
+		
+	<!-- 월별/연도별 장치분류 통계현황(결함신고) -->
+	<select id="pdScList" parameterType="egovMap" resultType="egovMap">
+		SELECT recall_date_from , division_cd, division_name, sum(car_count) as recall_car_count
+		FROM(
+				SELECT  recall_date_from , car_count
+					  , a.division1 AS division_cd, division_name
+				FROM (
+						SELECT 
+						<choose><when test ='rcType == "Y"'>
+							CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+	                        	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+	                        	 ELSE SUBSTR(S1.acception_time, 1, 4)
+	                        END AS recall_date_from
+						</when><otherwise>
+							<choose><when test ='recallYear == "2002"'>
+							'2003-이전' AS recall_date_from
+							</when><otherwise>
+							TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+							</otherwise></choose>
+						</otherwise></choose>
+							, T4.division1, 1 AS car_count    
+						FROM EPTN_PETITION a, PETITION_RECEIPT S1
+						LEFT OUTER JOIN petition_receipt_detail T3 
+							ON S1.RECEIPT_ID = T3.RECEIPT_ID 
+						LEFT OUTER JOIN eptn_petition_division_oper T4 
+							ON IS_USING = 'Y' 
+							AND T3.PETITION_DIVISION_CODE = T4.PETITION_DIVISION_CODE
+        				WHERE a.petition_id = S1.petition_id 
+					<choose><when test ='rcType != "Y"'>
+						<if test='recallYear != null and recallYear != ""'>
+							<choose><when test ='recallYear == "2002"'>
+						AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+							</when><otherwise>
+						AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+							</otherwise></choose>
+						</if>
+					</when><otherwise>
+						<if test='recallYear != null and recallYear != ""'>
+							<choose><when test ='recallYear == "2002"'>
+							AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+							</when><otherwise>
+							AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+							</otherwise></choose>
+						</if>
+						<if test='recallToYear != null and recallToYear != ""'>
+							AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+						</if>
+					</otherwise></choose>
+				) a , VW_DIVISION_OPER b
+				WHERE b.division1 = a.division1
+			) 
+		group by recall_date_from, division_cd, division_name
+		order by division_cd, recall_date_from desc 
+	</select>
+	
+	<!-- 월별/연도별 장치분류 차트현황(top5)(결함신고) -->
+	<select id="pdChartScList" parameterType="egovMap" resultType="egovMap">
+		SELECT division_cd, division_name, recall_car_count
+	    FROM
+	    (
+		SELECT division_cd, division_name, sum(car_count) as recall_car_count
+			FROM(
+					SELECT  recall_date_from , car_count
+						  , a.division1 AS division_cd, division_name
+					FROM (
+							SELECT 
+							<choose><when test ='rcType == "Y"'>
+								CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+		                        	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+		                        	 ELSE SUBSTR(S1.acception_time, 1, 4)
+		                        END AS recall_date_from
+							</when><otherwise>
+								<choose><when test ='recallYear == "2002"'>
+								'2003-이전' AS recall_date_from
+								</when><otherwise>
+								TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+								</otherwise></choose>
+							</otherwise></choose>
+								, T4.division1, 1 AS car_count    
+							FROM EPTN_PETITION a
+			  				LEFT OUTER JOIN vehicle_info b ON (a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID)
+							LEFT OUTER JOIN common_code b1 on ( b1.maincode = 'VI1'
+						           								and b1.subcode = b.maker_code )
+								, PETITION_RECEIPT S1
+							LEFT OUTER JOIN petition_receipt_detail T3 
+								ON S1.RECEIPT_ID = T3.RECEIPT_ID 
+							LEFT OUTER JOIN eptn_petition_division_oper T4 
+								ON IS_USING = 'Y' 
+								AND T3.PETITION_DIVISION_CODE = T4.PETITION_DIVISION_CODE
+	        				WHERE a.petition_id = S1.petition_id
+						<choose><when test ='rcType != "Y"'>
+							<if test='recallYear != null and recallYear != ""'>
+								<choose><when test ='recallYear == "2002"'>
+							AND (SUBSTR(S1.acception_time, 1, 4) is null 
+								OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+								OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+								</when><otherwise>
+							AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+								</otherwise></choose>
+							</if>
+						</when><otherwise>
+							<if test='recallYear != null and recallYear != ""'>
+								<choose><when test ='recallYear == "2002"'>
+								AND (SUBSTR(S1.acception_time, 1, 4) is null 
+								OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+								OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+								</when><otherwise>
+								AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+								</otherwise></choose>
+							</if>
+							<if test='recallToYear != null and recallToYear != ""'>
+								AND (SUBSTR(S1.acception_time, 1, 4) is null 
+								OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+								OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+							</if>
+						</otherwise></choose>
+						<if test ='carType == "KOR"'>
+							AND b1.ETC_VALUE5 = '1'
+						</if> 
+						<if test ='carType == "FOR"'>
+							AND b1.ETC_VALUE5 = '2'
+						</if> 
+					) a , VW_DIVISION_OPER b
+				WHERE b.division1 = a.division1
+				) 
+			group by division_cd, division_name
+		)
+	    order by recall_car_count desc
+	    limit 5
+	</select>
+	
+	<!-- 월별/연도별 접수경로 통계현황(결함신고) -->
+	<select id="rpScList" parameterType="egovMap" resultType="egovMap">
+		SELECT recall_date_from  
+            , sum(daesu1) daesu1
+            , sum(daesu2) daesu2
+            , sum(daesu3) daesu3
+            , sum(daesu4) daesu4
+            , sum(daesu5) daesu5
+            , sum(daesu9) daesu9
+			, sum(daesu) as tot_daesu
+		FROM(
+				SELECT  recall_date_from, recp_path
+	                , (case when recp_path = '001' then sum(cnt) else 0 end) daesu1
+	                , (case when recp_path = '002' then sum(cnt) else 0 end) daesu2
+	                , (case when recp_path = '003' then sum(cnt) else 0 end) daesu3
+	                , (case when recp_path = '004' then sum(cnt) else 0 end) daesu4
+	                , (case when recp_path = '005' then sum(cnt) else 0 end) daesu5
+	                , (case when recp_path = '009' then sum(cnt) else 0 end) daesu9
+	                , sum(cnt) daesu    
+				FROM (
+					SELECT recall_date_from, recp_path, car_count cnt    
+					FROM (
+						SELECT 
+						<choose><when test ='rcType == "Y"'>
+							CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+	                        	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+	                        	 ELSE SUBSTR(S1.acception_time, 1, 4)
+	                        END AS recall_date_from
+						</when><otherwise>
+							<choose><when test ='recallYear == "2002"'>
+							'2003-이전' AS recall_date_from
+							</when><otherwise>
+							TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+							</otherwise></choose>
+						</otherwise></choose>
+							, recp_path, 1 AS car_count    
+						FROM EPTN_PETITION a, PETITION_RECEIPT S1
+        				WHERE a.petition_id = S1.petition_id 
+					<choose><when test ='rcType != "Y"'>
+						<if test='recallYear != null and recallYear != ""'>
+							<choose><when test ='recallYear == "2002"'>
+						AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+							</when><otherwise>
+						AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+							</otherwise></choose>
+						</if>
+					</when><otherwise>
+						<if test='recallYear != null and recallYear != ""'>
+							<choose><when test ='recallYear == "2002"'>
+							AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+							</when><otherwise>
+							AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+							</otherwise></choose>
+						</if>
+						<if test='recallToYear != null and recallToYear != ""'>
+							AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+						</if>
+					</otherwise></choose>
+				)
+				ORDER BY recall_date_from DESC
+			)
+			GROUP BY recall_date_from, recp_path 
+		) 
+		group by recall_date_from
+		order by recall_date_from desc 
+	</select>
+	
+	<!-- 월별/연도별 접수경로 차트현황(결함신고) -->
+	<select id="rpChartScList" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+			  recp_path
+			, fn_get_code_nm('PRP', recp_path) AS recp_name
+			, recall_car_count
+		FROM(
+				SELECT recp_path, sum(car_count) AS recall_car_count    
+				FROM ( 
+						SELECT 
+						<choose><when test ='rcType == "Y"'>
+							CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+	                        	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+	                        	 ELSE SUBSTR(S1.acception_time, 1, 4)
+	                        END AS recall_date_from
+						</when><otherwise>
+							<choose><when test ='recallYear == "2002"'>
+							'2003-이전' AS recall_date_from
+							</when><otherwise>
+							TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+							</otherwise></choose>
+						</otherwise></choose>
+							, recp_path, 1 AS car_count    
+						FROM PETITION_RECEIPT S1, EPTN_PETITION a
+			  			LEFT OUTER JOIN vehicle_info b ON (a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID)
+						LEFT OUTER JOIN common_code b1 on ( b1.maincode = 'VI1'
+														and b1.subcode = b.maker_code )
+        				WHERE a.petition_id = S1.petition_id 
+					<choose><when test ='rcType != "Y"'>
+						<if test='recallYear != null and recallYear != ""'>
+							<choose><when test ='recallYear == "2002"'>
+						AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+							</when><otherwise>
+						AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+							</otherwise></choose>
+						</if>
+					</when><otherwise>
+						<if test='recallYear != null and recallYear != ""'>
+							<choose><when test ='recallYear == "2002"'>
+							AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+							</when><otherwise>
+							AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+							</otherwise></choose>
+						</if>
+						<if test='recallToYear != null and recallToYear != ""'>
+							<choose><when test ='recallToYear == "2002"'>
+							AND (SUBSTR(S1.acception_time, 1, 4) is null 
+							OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+							OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> '2002')
+							</when><otherwise>
+							AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear}
+							</otherwise></choose>
+						</if>
+					</otherwise></choose> 
+					<if test ='carType == "KOR"'>
+						AND b1.ETC_VALUE5 = '1'
+					</if> 
+					<if test ='carType == "FOR"'>
+						AND b1.ETC_VALUE5 = '2'
+					</if> 
+			)
+			GROUP BY recp_path 
+		) 
+		order by recall_car_count desc 
+	</select>
+	
+	<!-- 월별/연도별 차종별 통계현황(결함신고) -->
+	<select id="cgScList" parameterType="egovMap" resultType="egovMap">
+		SELECT  recall_date_from, group_car_name
+		      , count(*) AS recall_car_count
+		FROM
+		(
+			SELECT 
+				<!-- trim(b.product_name) as product_name, -->
+				FN_VINGRP_GRPCAR_NM(b.maker_code, substr(b.vehicle_id_number,0,8)) as group_car_name,
+			<choose><when test ='rcType == "Y"'>
+				CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+                   	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+                   	 ELSE SUBSTR(S1.acception_time, 1, 4)
+                END AS recall_date_from
+			</when><otherwise>
+				<choose><when test ='recallYear == "2002"'>
+				'2003-이전' AS recall_date_from
+				</when><otherwise>
+				TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+				</otherwise></choose>
+			</otherwise></choose> 
+			  FROM PETITION_RECEIPT S1, EPTN_PETITION a , vehicle_info b, common_code b1
+	     	  WHERE a.petition_id = S1.petition_id 
+	     		AND a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID
+				AND b.maker_code = b1.subcode
+				AND b.maker_code = #{makerCode}
+				AND b1.maincode = 'VI1'
+			<choose><when test ='rcType != "Y"'>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+				AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+					</when><otherwise>
+				AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+					</otherwise></choose>
+				</if>
+			</when><otherwise>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+					</when><otherwise>
+					AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+					</otherwise></choose>
+				</if>
+				<if test='recallToYear != null and recallToYear != ""'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+				</if>
+			</otherwise></choose> 
+		)	
+	    GROUP BY recall_date_from, group_car_name
+		ORDER BY group_car_name, recall_date_from DESC
+	</select>
+	
+	<!-- 월별/연도별 차종별 차트현황(top5)(결함신고) -->
+	<select id="cgChartScList" parameterType="egovMap" resultType="egovMap">
+	SELECT group_car_name, recall_car_count
+    FROM
+    (
+		SELECT  group_car_name
+		      , count(*) AS recall_car_count
+		FROM
+		(
+			SELECT 
+				<!-- TRIM(b.product_name) AS product_name, -->
+				FN_VINGRP_GRPCAR_NM(b.maker_code, substr(b.vehicle_id_number,0,8)) as group_car_name,
+			<choose><when test ='rcType == "Y"'>
+				CASE WHEN SUBSTR(S1.acception_time, 1, 4) is null THEN '2002'
+                   	 WHEN SUBSTR(S1.acception_time, 1, 4) = '0000' THEN '2002'
+                   	 ELSE SUBSTR(S1.acception_time, 1, 4)
+                END AS recall_date_from
+			</when><otherwise>
+				<choose><when test ='recallYear == "2002"'>
+				'2003-이전' AS recall_date_from
+				</when><otherwise>
+				TO_CHAR(TO_DATE(SUBSTR(S1.acception_time, 1, 6), 'YYYYMM'),'YYYY-MM') AS recall_date_from
+				</otherwise></choose>
+			</otherwise></choose>
+			  FROM PETITION_RECEIPT S1, EPTN_PETITION a, vehicle_info b, common_code b1
+      		  WHERE a.petition_id = S1.petition_id 
+      			AND a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID
+				AND b.maker_code = b1.subcode
+				AND b.maker_code = #{makerCode}
+				AND b1.maincode = 'VI1'
+			<choose><when test ='rcType != "Y"'>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+				AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) = '2002')
+					</when><otherwise>
+				AND SUBSTR(S1.acception_time, 1, 4) = #{recallYear}
+					</otherwise></choose>
+				</if>
+			</when><otherwise>
+				<if test='recallYear != null and recallYear != ""'>
+					<choose><when test ='recallYear == "2002"'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> '2002')
+					</when><otherwise>
+					AND  SUBSTR(S1.acception_time, 1, 4) <![CDATA[>=]]> #{recallYear}
+					</otherwise></choose>
+				</if>
+				<if test='recallToYear != null and recallToYear != ""'>
+					AND (SUBSTR(S1.acception_time, 1, 4) is null 
+					OR SUBSTR(S1.acception_time, 1, 4) = '0000'
+					OR SUBSTR(S1.acception_time, 1, 4) <![CDATA[<=]]> #{recallToYear})
+				</if>
+			</otherwise></choose>
+			<if test ='carType == "KOR"'>
+				AND b1.ETC_VALUE5 = '1'
+			</if> 
+			<if test ='carType == "FOR"'>
+				AND b1.ETC_VALUE5 = '2' 
+			</if> 
+		)	
+	    group by group_car_name
+    )
+    order by recall_car_count desc
+    limit 5
+	</select>
+	
+</mapper>

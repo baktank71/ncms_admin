@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="om.login">
+
+  <!-- 사용자 로그인 실패 횟수 증가 -->
+	<update id="updateLoginFailrCo" parameterType="loginVo">
+    UPDATE member
+       SET mb_noti_cnt = mb_noti_cnt + 1
+     WHERE mb_id = #{mbId}
+   	</update>
+
+  <!-- 사용자 로그인 정보 업데이트 -->
+	<update id="updateLoginInfo" parameterType="loginVo">
+		UPDATE member
+		   SET mb_noti_cnt = 0 
+		 WHERE mb_id = #{mbId}
+	</update>
+	
+	<!--  사용자 개인정보 변경 -->
+	<update id ="updatePassword" parameterType="loginVo">
+		UPDATE member
+		SET
+		mb_password = #{mbPwConfirm }
+		WHERE mb_id = #{mbId }
+	</update>
+
+	<!-- 비밀번호 체크 -->
+	<select id="passwordCheck" parameterType="LoginVo" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM member
+		WHERE mb_id = #{mbId } 
+		AND mb_password = #{mbPw }
+	</select>
+</mapper>

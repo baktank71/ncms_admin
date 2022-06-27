@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cr.recallNtcn">
+
+	<!-- list.do의 목록 -->
+	<select id="list" parameterType="egovMap" resultType="egovMap">
+	    SELECT *
+		FROM (		
+			SELECT ROWNUM AS RNUM 
+				  	, aa.*
+     	 FROM(
+     	 SELECT 
+	         SUBSCRIBE_NO                        	AS SUBSCRIBE_NO,
+	         SUBSCRIBE_NAME                       AS SUBSCRIBE_NAME,
+	         SUBSCRIBE_CELLULAR                   AS SUBSCRIBE_CELLULAR,
+	         COUNT(*) OVER()                        AS total_count,
+	         SUBSCRIBE_TELEPHONE                  AS SUBSCRIBE_TELEPHONE,
+	         a.OWNER_NAME                           AS OWNER_NAME,
+	         a.OWNER_RESIDENT_ID                    AS OWNER_RESIDENT_ID,
+	         a.VEHICLE_NUMBER                       AS VEHICLE_NUMBER,
+	         TO_CHAR(a.WRITE_TIME, 'YYYY-MM-DD') 		AS WRITE_TIME,
+	         TO_CHAR(a.LAST_MODIFIED, 'YYYY-MM-DD') AS LAST_MODIFIED,
+	         OWNER_FLAG                           AS OWNER_FLAG,
+	         RESIDENT_ID                          AS RESIDENT_ID,
+	         SUBSCRIBE_EMAIL                      AS SUBSCRIBE_EMAIL,
+	         DEL_FLAG								AS DEL_FLAG         	
+     	 FROM RECALL_INFORM_SUBSCRIBE a
+		 LEFT OUTER JOIN  vehicle_info b
+			  ON a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID
+    	 WHERE 1=1
+		<if test = 'searchStr != null and searchStr != ""'>
+			<choose>
+				<when test = 'searchId == "1"'>
+					AND UPPER(SUBSCRIBE_NAME) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when>
+				<when test = 'searchId == "2"'>
+					AND UPPER(a.VEHICLE_NUMBER) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when>
+				<when test = 'searchId == "3"'>
+					AND UPPER(PRODUCT_NAME) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when>
+				<otherwise>
+					AND (UPPER(SUBSCRIBE_NAME) LIKE '%' || UPPER(#{searchStr}) || '%'
+					OR UPPER(a.VEHICLE_NUMBER) LIKE '%' || UPPER(#{searchStr}) || '%'
+					OR UPPER(PRODUCT_NAME) LIKE '%' || UPPER(#{searchStr}) || '%')
+				</otherwise>
+			</choose>
+		</if>
+		
+		<!-- 날짜 검색 쿼리 -->
+		<if test = 'searchFromDate != null and searchFromDate != ""'>
+              	AND TO_CHAR(a.WRITE_TIME, 'YYYY-MM-DD') <![CDATA[ >= ]]> #{searchFromDate}
+
+		</if>
+		<if test ='searchToDate != null and searchToDate != ""'>
+              	AND TO_CHAR(a.WRITE_TIME, 'YYYY-MM-DD') <![CDATA[ <= ]]> #{searchToDate}
+		</if>
+		
+		<if test = 'searchDelFlag  != null and searchDelFlag != ""'>
+    	 		AND DEL_FLAG IS NULL
+    	</if>
+			ORDER BY WRITE_TIME DESC
+				) AS aa
+			)
+		WHERE 
+			RNUM BETWEEN #{START} AND #{END}
+	</select>
+	
+	<!-- 상세보기 -->
+	<select id="detail" parameterType="egovMap" resultType="egovMap">
+		SELECT
+			a.SUBSCRIBE_NO,
+			a.SUBSCRIBE_NAME,
+			a.SUBSCRIBE_CELLULAR,
+			a.SUBSCRIBE_TELEPHONE,
+			a.OWNER_NAME,
+			a.OWNER_RESIDENT_ID,
+			a.VEHICLE_NUMBER,
+	        TO_CHAR(a.WRITE_TIME, 'YYYY-MM-DD') AS WRITE_TIME,
+			a.LAST_MODIFIED,
+			a.VEHICLE_INFO_ID,
+			a.OWNER_FLAG,
+			a.RESIDENT_ID,
+			a.SUBSCRIBE_EMAIL,
+			a.PASSWORD,
+			a.del_flag,
+			a.event_win_flag ,
+			DECODE(a.admin_add, 'Y', '관리자') AS admin_add,
+			b.vehicle_id_number,
+			SUBSTR(b.registration_date,1,8) AS registration_date,
+			b.year_type,
+			b.product_name,
+			b.motor_type,
+			b.engine_type,
+			b.maker_code,
+			FN_GET_CODE_NM('VI3', b.fuel_code) AS fuel_code,
+			b.use_code,
+			b.form_okno,
+			b.baegi,
+			b.eng_cyl,
+			FN_GET_CODE_NM('DI2', b.trans_type) AS trans_type
+		FROM
+			RECALL_INFORM_SUBSCRIBE  a
+		LEFT OUTER JOIN  vehicle_info b
+			ON a.VEHICLE_INFO_ID = b.VEHICLE_INFO_ID
+		WHERE SUBSCRIBE_NO = #{subscribeNo } 
+	</select>
+
+
+ 	<!-- 리콜알리미 해지 -->
+	<update id= "deleteUser" parameterType="egovMap">
+		UPDATE RECALL_INFORM_SUBSCRIBE
+		SET 
+			DEL_FLAG = 'Y'
+		WHERE 
+			SUBSCRIBE_NO = #{subscribeNo }
+	</update>
+
+	<!-- 비밀번호 초기화 -->
+	<update id="resetPassword" parameterType="egovMap">
+		UPDATE RECALL_INFORM_SUBSCRIBE
+		SET 
+			PASSWORD = #{newPw },
+			LAST_MODIFIED = SYSDATE
+		WHERE 
+			SUBSCRIBE_NO = #{subscribeNo } 
+	</update>
+</mapper>

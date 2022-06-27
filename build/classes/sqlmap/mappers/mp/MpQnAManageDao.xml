@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mp.qna">
+
+	<!-- QnA 게시판 목록 조회 -->
+	<select id="list" parameterType="egovMap" resultType="egovMap">
+		SELECT * FROM (
+			SELECT 
+				ROWNUM AS RNUM,
+				aa.*
+			FROM (
+				SELECT
+					CONTENTS_ID,
+					TITLE,
+					CONTENTS,
+					COUNT(*) OVER() AS TOTAL_COUNT,
+					WRITE_NAME,
+					TO_CHAR(TO_DATE(WRITE_TIME, 'yyyymmddhhmiss'),' yyyy-mm-dd') AS WRITE_TIME,
+					IS_OPEN,
+					LAST_MODIFIED,
+					WRITE_USER_ID,
+					REPLY_CONTENTS,
+					REPLY_WRITE_TIME,
+					REPLY_WRITE_NAME,
+					REPLY_LAST_MODIFIED,
+					REPLY_WRITE_USER_ID,
+					REPLY_YN
+				FROM
+					CONTENTS_INFO_QNA a
+					WHERE 1=1
+				<if test = 'searchStr != null and searchStr != ""'>
+					<choose>
+						<when test = 'searchId == "1"'>
+							AND TITLE LIKE '%' || #{searchStr } || '%'
+						</when>
+						<when test = 'searchId == "2"'>
+							AND CONTENTS LIKE '%' || #{searchStr } || '%'
+						</when>
+						<otherwise>
+							AND (TITLE LIKE '%' || #{searchStr } || '%'  
+							OR CONTENTS LIKE '%' || #{searchStr } || '%')
+						</otherwise>
+					</choose>
+				</if>
+				
+				<if test = 'searchFromDate != null and searchFromDate != ""'>
+					AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[>=]]> TO_DATE(REPLACE(#{searchFromDate}, '-',''), 'yyyymmdd')
+				</if>
+				<if test = 'searchToDate != null and searchToDate != ""'>
+					AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[<=]]> TO_DATE(REPLACE(#{searchToDate}, '-',''), 'yyyymmdd')
+				</if>
+				ORDER BY CONTENTS_ID DESC
+			) AS aa
+		)
+
+		WHERE 1=1
+		AND RNUM BETWEEN #{START } AND #{END } 
+	</select>
+	
+	<!-- QnA 상세보기 -->
+	<select id="detail" parameterType="egovMap" resultType="egovMap">
+			SELECT
+				CONTENTS_ID,
+				TITLE,
+				CONTENTS,
+				WRITE_NAME,
+				TO_CHAR(TO_DATE(WRITE_TIME, 'yyyymmddhhmiss'),'yyyy-mm-dd') AS WRITE_TIME,
+				IS_OPEN,
+				LAST_MODIFIED,
+				WRITE_USER_ID,
+				REPLY_CONTENTS,
+				TO_CHAR(TO_DATE(REPLY_WRITE_TIME, 'yyyymmddhhmiss'), 'yyyy-mm-dd') AS REPLY_WRITE_TIME,
+				REPLY_WRITE_NAME,
+				REPLY_LAST_MODIFIED,
+				REPLY_WRITE_USER_ID
+			FROM
+				CONTENTS_INFO_QNA a
+			WHERE 1=1
+			AND CONTENTS_ID = #{contentsId }	
+	</select>
+	
+	<!-- 상세보기 할 시, 해당 게시판에 첨부파일이 있을 때 보여주는 쿼리 -->
+	<select id="detailFile" parameterType="egovMap" resultType="egovMap">
+		SELECT 	FILE_ID,
+				ATTACHMENT,
+				ATTACHMENT_ORIGINAL,
+				SERVER_PATH
+		FROM	CONTENTS_INFO_QNA_FILE
+		WHERE	CONTENTS_ID = #{contentsId }
+		AND 	REPLY_TYPE = #{replyType }
+	</select>
+	
+	<!-- 답변 업데이트 -->
+	<update id="answerUpdate" parameterType="egovMap">
+			UPDATE 
+				CONTENTS_INFO_QNA
+			SET 
+				REPLY_CONTENTS = #{replyContents },
+				REPLY_WRITE_TIME = TO_CHAR(SYSDATE, 'YYYYMMDDhhmiss'),
+				REPLY_WRITE_NAME = #{userNm },
+				REPLY_LAST_MODIFIED = TO_CHAR(SYSDATE, 'YYYYMMDDhhmiss'),
+				REPLY_WRITE_USER_ID = #{userId },
+				REPLY_YN = 'Y'
+			WHERE 1=1
+				AND CONTENTS_ID = #{contentsId }	
+	</update>
+	
+	<!-- 해당 QnA 삭제 -->
+	<delete id="answerDelete" parameterType="egovMap">
+			DELETE FROM CONTENTS_INFO_QNA
+			WHERE 1=1
+			AND CONTENTS_ID = #{contentsId }
+	</delete>
+	
+</mapper>

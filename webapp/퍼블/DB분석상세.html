@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>자동차리콜센터 관리자시스템</title>
+<meta name="title" content="자동차리콜센터 관리자시스템"/>
+<meta name="author" content="자동차리콜센터 관리자시스템"/>
+<meta name="keywords" content="자동차리콜센터 관리자시스템"/>
+<link href="assets/css/all.css" rel="stylesheet" type="text/css" />
+<link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+<header>
+	<div class="uk-container uk-container-expand">
+        <div uk-navbar>
+            <div class="uk-navbar-left">
+                <ul class="uk-navbar-nav">
+                    <li class="uk-active"><a href="#">결함정보</a></li>
+                    <li><a href="#">종합분석</a></li>
+                    <li><a href="#">조사관리</a></li>
+                    <li><a href="#">사후관리</a></li>
+                    <li><a href="#">업무지원</a></li>
+                    <li><a href="#">관리자기능</a></li>
+                    <li><a href="#">통계</a></li>
+                </ul>
+            </div>
+            <div class="uk-navbar-right">
+                관리자님 접속중<span>2019년 4월 23일 09:11:06</span>
+                <button class="uk-button uk-button-default uk-button-small" onclick="window.location.href='editProfile.html'">개인정보변경</button>
+                <button class="uk-button uk-button-default uk-button-small">로그아웃</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav>
+    <div class="sidebar uk-background-default uk-light">
+        <div class="logo">
+            <a href="index.html"><h1 class="skip">자동차리콜센터 로고</h1></a>
+        </div>
+        <h2 class="skip">좌측메뉴</h2>
+        <ul class="uk-nav-parent-icon" uk-nav>
+            <li class="uk-parent uk-open"><!-- 메뉴가 펼쳐졌을땐 .uk-open -->
+                <a href="#">결함신고</a>
+                <ul class="uk-nav-sub">
+                    <li><a href="#">3뎁스예시</a></li>
+                    <li><a href="#">3뎁스예시</a></li>
+                </ul>
+            </li>
+            <li><!-- 하위메뉴가 없을땐 .uk-parent 제거 -->
+                <a href="#">리콜불만신고</a>
+            </li>
+            <li>
+                <a href="#">검사소정보</a>
+            </li>
+            <li>
+                <a href="#">언론모니터링</a>
+            </li>
+            <li>
+                <a href="#">무상점검수리내역</a>
+            </li>
+            <li>
+                <a href="#">기술정보자료</a>
+            </li>
+            <li>
+                <a href="#">기술분석자료</a>
+            </li>
+            <li>
+                <a href="#">사고기록장치</a>
+            </li>
+            <li>
+                <a href="#">외국리콜모니터링</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<article>
+	<h2 class="skip">컨텐츠</h2>
+	<section>
+		<div class="content-padder">
+            <div class="uk-section-small">
+                <div class="uk-container uk-container-large">
+                    <h3>메뉴명</h3>
+                    <div class="uk-card uk-card-default uk-card-body uk-child-width-1-1">
+                        <h4>신청인</h4>
+                        <table class="uk-table uk-table-divider table-stat">
+                            <caption>신청인</caption>
+                            <colgroup>
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>신청자명</th>
+                                    <td>1</td>
+                                    <th>전화번호</th>
+                                    <td>1</td>
+                                    <th>이메일</th>
+                                    <td>1</td>
+                                    <th>신청자그룹</th>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <th>회사명</th>
+                                    <td>1</td>
+                                    <th>부서명</th>
+                                    <td>1</td>
+                                    <th>회사전화번호</th>
+                                    <td>1</td>
+                                    <th>팩스번호</th>
+                                    <td>1</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>자동차정보</h4>
+                        <div class="uk-text-right">
+                            <button type="button" class="uk-button uk-button-small uk-button-primary">자동차정보조회</button>
+                        </div>  
+                        <table class="uk-table uk-table-divider table-stat">
+                            <caption>자동차정보</caption>
+                            <colgroup>
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                                <col style="width: 115px;">
+                                <col style="width: 170px;">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>자동차번호</th>
+                                    <td>1</td>
+                                    <th>차명</th>
+                                    <td>1</td>
+                                    <th>형식</th>
+                                    <td>1</td>
+                                    <th>소유자명</th>
+                                    <td>1</td>                                    
+                                </tr>
+                                <tr>
+                                    <th>소유자주민번호</th>
+                                    <td>1</td>
+                                    <th>차대번호</th>
+                                    <td>1</td>
+                                    <th>변속기</th>
+                                    <td>1</td>
+                                    <th>등록일자</th>
+                                    <td>1</td>                                    
+                                </tr>
+                                <tr>
+                                    <th>모델년도</th>
+                                    <td>1</td>
+                                    <th>제원관리번호</th>
+                                    <td>1</td>
+                                    <th>엔진타입</th>
+                                    <td>1</td>
+                                    <th>사용연료</th>
+                                    <td>1</td>                                    
+                                </tr>
+                                <tr>
+                                    <th>배기량</th>
+                                    <td>1</td>
+                                    <th>기통수</th>
+                                    <td colspan="5">1</td>
+                                </tr>                                                         
+                            </tbody>
+                        </table>
+
+                        <h4>분석요청정보</h4>
+                        <table class="uk-table uk-table-divider table-stat">
+                            <caption>자동차정보</caption>
+                            <colgroup>
+                                <col style="width: 60px;">
+                                <col style="width: 50px;">
+                                <col style="width: 460px;">
+                                <col style="width: 115px;">
+                                <col style="width: 460px;">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th colspan="2">제목</th>
+                                    <td colspan="3">1</td>                         
+                                </tr>
+                                <tr>
+                                    <th colspan="2">현상(발생원인)</th>
+                                    <td colspan="3">1</td>                         
+                                </tr>
+                                <tr>
+                                    <th colspan="2">조사결과</th>
+                                    <td colspan="3">1</td>                         
+                                </tr>
+                                <tr>
+                                    <th colspan="2">조사요청주제</th>
+                                    <td>1</td>
+                                    <th>과실주체</th>
+                                    <td class="radio">
+                                        <label><input class="uk-checkbox" type="checkbox" checked> 운전자</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 자동차</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 기타</label>
+                                    </td>                              
+                                </tr>
+                                <tr>
+                                    <th colspan="2">사고유형</th>
+                                    <td class="radio">
+                                        <label><input class="uk-checkbox" type="checkbox" checked> 충돌</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 화재</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 기타</label>
+                                    </td>  
+                                    <th>사고일</th>
+                                    <td>1</td>                                                                
+                                </tr>
+                                <tr>
+                                    <th colspan="2">조사일</th>
+                                    <td>1</td>
+                                    <th>주행거리</th>
+                                    <td>1</td>                              
+                                </tr>
+                                <tr>
+                                    <th colspan="2">에어백전개여부</th>
+                                    <td colspan="3">1</td>                         
+                                </tr>
+                                <tr>
+                                    <th rowspan="4">에어백<br>전개위치</th>
+                                    <th>정면</th>
+                                    <td class="radio">
+                                        <label><input class="uk-checkbox" type="checkbox" checked> 운전석</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 조수석</label>
+                                    </td>  
+                                    <th rowspan="4">파손부위</th>
+                                    <td rowspan="4" class="radio">
+                                        <label><input class="uk-checkbox" type="checkbox" checked> 정면</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 좌측면</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 우측면</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 후면</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 엔진룸</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 실내</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 트렁크</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 기타</label>
+                                    </td>  
+                                </tr>
+                                <tr>
+                                    <th>사이드</th>
+                                    <td class="radio">
+                                        <label><input class="uk-checkbox" type="checkbox" checked> 운전석</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 조수석</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>커튼</th>
+                                    <td class="radio">
+                                        <label><input class="uk-checkbox" type="checkbox" checked> 운전석</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 조수석</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>기타</th>
+                                    <td class="radio">
+                                        <label><input class="uk-checkbox" type="checkbox" checked> 운전석</label>
+                                        <label><input class="uk-checkbox" type="checkbox"> 조수석</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th colspan="2">인명피해</th>
+                                    <td class="uk-padding-remove">
+                                        <table class="uk-table uk-table-divider">
+                                            <caption></caption>
+                                            <colgroup>
+                                                <col style="width: 30%;">
+                                                <col style="width: 30%;">
+                                                <col style="width: 30%;">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>사망(명)</th>
+                                                    <th>중상(명)</th>
+                                                    <th>경상(명)</th>
+                                                </tr>                                                
+                                            </thead>
+                                            <tbody class="uk-text-center">
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>1</td>
+                                                    <td>1</td>                                  
+                                                </tr>                                                                                                      
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                    <th>대물피해</th>
+                                    <td>1</td>                              
+                                </tr>
+                                <tr>
+                                    <th colspan="2">사고장소</th>
+                                    <td>1</td>
+                                    <th>사고도로</th>
+                                    <td>1</td>                              
+                                </tr>
+                                <tr>
+                                    <th colspan="2">사고기록장치</th>
+                                    <td class="uk-padding-remove">
+                                        <table class="uk-table uk-table-divider">
+                                            <caption></caption>
+                                            <colgroup>
+                                                <col style="width: 50%;">
+                                                <col style="width: 50%;">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>장착여부</th>
+                                                    <th>분석여부</th>
+                                                </tr>                                                
+                                            </thead>
+                                            <tbody class="uk-text-center">
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>1</td>                                 
+                                                </tr>                                                                                                      
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                    <th>운행기록계</th>
+                                    <td class="uk-padding-remove">
+                                        <table class="uk-table uk-table-divider">
+                                            <caption></caption>
+                                            <colgroup>
+                                                <col style="width: 50%;">
+                                                <col style="width: 50%;">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th>장착여부</th>
+                                                    <th>분석여부</th>
+                                                </tr>                                                
+                                            </thead>
+                                            <tbody class="uk-text-center">
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td>1</td>                                 
+                                                </tr>                                                                                                      
+                                            </tbody>
+                                        </table>
+                                    </td>                            
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>첨부파일</h4>
+                        <div class="table-scroll row-2">
+                            <table class="uk-table uk-table-divider table-stat">
+                                <caption>첨부파일</caption>
+                                <colgroup>
+                                    <col style="width: 7%;">
+                                    <col style="width: 73%;">
+                                    <col style="width: 10%;">
+                                    <col style="width: 10%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>번호</th>
+                                        <th>첨부파일</th>
+                                        <th>다운로드</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="uk-text-center">
+                                    <tr>
+                                        <td>1</td>
+                                        <td class="uk-text-left">1</td>
+                                        <td><button class="uk-button uk-button-default uk-button-small">다운로드</button></td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td class="uk-text-left">1</td>
+                                        <td><button class="uk-button uk-button-default uk-button-small">다운로드</button></td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td class="uk-text-left">1</td>
+                                        <td><button class="uk-button uk-button-default uk-button-small">다운로드</button></td>
+                                        <td>1</td>
+                                    </tr>                                                           
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h4>분석결과</h4>
+                        <table class="uk-table uk-table-divider table-stat">
+                            <caption>분석결과</caption>
+                            <colgroup>
+                                <col style="width: 115px;">
+                                <col style="width: 330px;">
+                                <col style="width: 115px;">
+                                <col style="width: 330px;">
+                                <col style="width: 115px;">
+                                <col style="width: 330px;">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>상태</th>
+                                    <td>1</td>
+                                    <th>분석결과등록자</th>
+                                    <td>1</td>
+                                    <th>분석결과등록일</th>
+                                    <td>1</td>                                
+                                </tr>
+                                <tr>
+                                    <th>분석결과</th>
+                                    <td colspan="5">1</td>                                
+                                </tr>
+                                <tr>
+                                    <th><button class="uk-button uk-button-default uk-button-small">파일선택</button></th>                            
+                                    <td colspan="5" class="uk-padding-remove">
+                                        <div class="table-scroll row-2">
+                                            <table class="uk-table uk-table-divider">
+                                                <caption>파일목록</caption>
+                                                <colgroup>
+                                                    <col style="width: 50%;">
+                                                    <col style="width: 10%;">
+                                                    <col style="width: 10%;">
+                                                    <col style="width: 10%;">
+                                                </colgroup>
+                                                <thead>
+                                                    <tr>
+                                                        <th>파일명</th>
+                                                        <th>다운로드</th>
+                                                        <th>등록일</th>
+                                                        <th>삭제</th>
+                                                    </tr>                                                
+                                                </thead>
+                                                <tbody class="uk-text-center">
+                                                    <tr>
+                                                        <td class="uk-text-left">1</td>
+                                                        <td>1</td>
+                                                        <td>1</td>
+                                                        <td>1</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="uk-text-left">1</td>
+                                                        <td>1</td>
+                                                        <td>1</td>
+                                                        <td>1</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="uk-text-left">1</td>
+                                                        <td>1</td>
+                                                        <td>1</td>
+                                                        <td>1</td>
+                                                    </tr>                                                                                                        
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>                                                      
+                            </tbody>
+                        </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        
+
+                        <div class="uk-text-center btn-submit-group">
+                            <button type="button" class="uk-button uk-button-large uk-button-primary uk-margin-small-right">저장</button>    
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>		
+	</section>
+</article>
+
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/uikit.min.js"></script>
+<script src="assets/js/uikit-icons.min.js"></script>
+</body>
+</html>

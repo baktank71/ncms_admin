@@ -1,0 +1,208 @@
+@charset "utf-8";
+/** test **/
+.tt{border:1px solid red}
+.disNone{display: none}
+
+/** common **/
+*,body{word-break: break-all; box-sizing: border-box; color:#555}
+body{height:100%; font-family: 'Noto Sans KR', sans-serif; font-size:14px; background: #efefef}
+ul,ol,li,dl,dt,dd{list-style: none; margin:0; padding:0}
+h1,h2,h3,h4{margin:0; padding:0}
+a{text-decoration: none; cursor: pointer}
+p{padding:0; margin:0}
+
+.mbs{display: block; margin-bottom: 11px}
+
+/** font **/
+h3{font-size:12px; font-weight: 700; line-height: 20px}
+
+.t_blue{color: #2cb5ee}
+.t_org{color: #ffa261}
+
+/** layout **/
+#wrap{}
+#header{position:fixed; top:0; width:100%; z-index: 10000; background: #f7f7f7}
+#container{position:relative; z-index: 2}
+
+/** header **/
+.header_box{border-bottom:1px solid #bbb}
+.header_top{display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; height:64px}
+.header_title{flex-grow: 1; text-align: center; font-size:19px; font-weight: 700; letter-spacing: -0.05em; color: #454545}
+.header_left{flex-basis: 64px; flex-shrink: 0; justify-content: flex-start}
+.header_right{flex-basis: 64px; flex-shrink: 0; justify-content:flex-end}
+
+.header_top a.btn_menu{display: block; width:64px; height:64px; background: url(../../images/header_menu.png) center no-repeat; background-size:contain}
+.header_top a.btn_back{display: block; width:64px; height:64px; background: url(../../images/header_back.png) center no-repeat; background-size:contain}
+.header_top a.btn_notice{ display: block; width:64px; height:64px; background: url(../../images/header_notice.png) center no-repeat; background-size:contain}
+.header_top a.btn_notice.on{background: url(../../images/header_notice_on.png) center no-repeat; background-size:contain}
+
+.header_tab{}
+.header_tab ul{display: flex; flex-direction: row; flex-wrap: nowrap; padding:8px 20px 12px}
+.header_tab li{flex-basis: 33%; flex-grow: 1; margin:0 5px }
+.header_tab li a{display: block; height: 36px; font-size:15px; font-weight: 700; text-align: center; line-height: 36px; color: #bbb; border-radius: 38px}
+.header_tab li.on a{color: #fff; background: #595959}
+
+
+/** container **/
+.content{display: flex; flex-direction: column; align-content: stretch; padding:0 6% 8%; margin-top:64px; overflow-y: inherit}
+.content_sub{display: flex; flex-direction: column; padding:4% 6% 10%; margin-top:64px}
+.content_sub_tab{display: flex; flex-direction: column; padding:4% 6% 10%; margin-top:122px}
+
+
+/** main **/
+.main{}
+.main_bg{position:fixed; top:0; width:100%; height:100%; background-color: #f7f7f7; z-index:1}
+.main_img{flex-basis: 270px; background: url(../../images/main_img.png) center top 16px no-repeat; background-size: contain}
+.main_mileage{padding:0 16px 20px}
+.main_mileage ul{display: flex; flex-direction: row; flex-wrap: nowrap}
+.main_mileage li{flex-basis: 50%; flex-grow: 1; font-size:26px; font-weight: 700; text-align: center; color:#000; letter-spacing: -0.03em;}
+.main_mileage li span.subject{display: block; font-size: 16px; padding-bottom: 5px }
+.main_btn{flex-basis: 104px; position: relative }
+.main_btn a.btn_suggest{position:absolute; left:1.5%; bottom:0; display: block; width:80px; height: 80px; background: url(../../images/main_btn_qna.png) center no-repeat; background-size:contain; border-radius: 80px}
+.main_btn a.btn_save{position:absolute; right:2.5%; bottom:0; display: block; width:104px; height: 104px; background: url(../../images/main_btn_save.png) center no-repeat; background-size:contain; border-radius: 104px}
+
+.menu{position: fixed; width:100%; left:0; top:0; z-index: 11000}
+.menu_area{position: fixed; display: flex; flex-direction: column; width: 68%; max-width: 300px; height: 100%; background: #fff; z-index: 2}
+.menu_area h1.logo{flex-basis: 106px; font-size:20px; letter-spacing: -0.03em; line-height: 1.3em; color: #fff; background: url(../../images/menu_logo.png) left -2px center no-repeat; background-size:contain;  background-color: #25a1e9}
+.menu_list ul{display: flex; flex-direction: column}
+.menu_list li{flex-basis:45px; font-size:15px; color: #333; border-bottom: 1px solid #dedede}
+.menu_list li a{display: block;  padding:15px 20px}
+
+.smenu ul{display: flex; flex-direction: row; margin-top:6px}
+.smenu ul li{flex-basis: 50%; font-size: 14px; color: #555; letter-spacing: -0.025em; text-align: center}
+.smenu ul li a{display: block; padding:16px 0}
+    .icon_login{display: inline-block; width:24px; height: 24px; background: url(../../images/icon_login.png) center no-repeat; background-size:contain;  margin-right:5px; vertical-align: middle}
+    .icon_join{display: inline-block; width:24px; height: 24px; background: url(../../images/icon_join.png) center no-repeat; background-size:contain; margin-right:4px; vertical-align: middle}
+    .icon_modify{display: inline-block; width:24px; height: 24px; background: url(../../images/icon_modify.png) center no-repeat; background-size:contain; margin-right:4px; vertical-align: middle}
+
+
+.bg_dark{position:fixed; width:100%; height:100%; left:0; top:0; background: #000; opacity: 0.7; z-index: 1}
+
+
+/** sub **/
+.login_area{display: flex; flex-direction: column}
+.check_box input[type="checkbox"]+label{display:inline-block; cursor: pointer; line-height: 22px; padding-left:28px; background: url(../../images/checkbox1.png) 0 center no-repeat; background-size:contain; letter-spacing: -0.075em; color: #555}
+.check_box input[type="checkbox"]:checked+label{background: url(../../images/checkbox1_on.png) 0 center no-repeat; background-size:contain}
+
+.btn_login{display: block; width:100%; height: 50px; background: url(../../images/btn_login.png) center no-repeat; background-size:contain; background-color: #24a1e9; border-radius: 50px; border: 0; text-indent: -5000px; overflow: hidden; margin:3px 0 14px 0}
+.btn_join{display: block; width:100%; height: 50px; background: url(../../images/btn_join.png) center no-repeat; background-size:contain; background-color: #24a1e9; border-radius: 50px; border: 0; text-indent: -5000px; overflow: hidden}
+.btn_send{display: block; width:100%; height: 50px; background: url(../../images/btn_send.png) center no-repeat; background-size:contain; background-color: #24a1e9; border-radius: 50px; border: 0; text-indent: -5000px; overflow: hidden}
+
+.btn_modify{float:left; display: block; width:48%; height: 50px; background: url(../../images/btn_modify.png) center no-repeat; background-size:contain; background-color: #24a1e9; border-radius: 50px; border: 0; text-indent: -5000px; overflow: hidden; margin:0 1%}
+.btn_cancel{float:left; display: block; width:48%; height: 50px; background: url(../../images/btn_cancel.png) center no-repeat; background-size:contain; background-color: #aaa; border-radius: 50px; border: 0; text-indent: -5000px; overflow: hidden; margin:0 1%}
+
+.join_area{padding-bottom: 26px}
+.join_area h3{padding:2px 0 7px 0}
+.g1{display:flex; flex-direction: row; flex-wrap: nowrap}
+    .join_id,.card_id{flex-basis: 220px; flex-grow: 2}
+    .post_id{flex-basis: 190px; flex-grow: 2}
+
+.btn_m{flex-basis:94px; flex-shrink: 0; flex-grow: 1; height:44px; font-size:13px; line-height: 44px; letter-spacing: 0em; text-align: center; margin-left:8px; border-radius: 3px}
+.btn_l{flex-basis:122px; flex-shrink: 0; flex-grow: 1; height:44px; font-size:13px; line-height: 44px; text-align: center; margin-left:8px; border-radius: 3px}
+.btn_gray{color: #fff; background: #595959}
+.btn_area{display: block; margin:12px 0}
+
+.bottom_link{}
+.bottom_link ul{display: flex; flex-direction: row; flex-wrap: nowrap;  justify-content: center}
+.bottom_link li{flex-basis: auto; font-size: 12px; color: #777; border-right:1px solid #ddd}
+.bottom_link li:last-child{border:none}
+.bottom_link li a{padding:0 12px}
+
+.setting_area{}
+.setting_area ul{display: flex; flex-direction: column; background: #fff; border-radius: 3px}
+.setting_area li{display: flex; flex-direction: row; padding:16px 12px 14px; border-bottom: 1px solid #bbb}
+.setting_area li:last-child{border-bottom:0}
+.setting_area li span.t1{flex-basis: 70%; flex-grow: 1; align-content: flex-start; font-size:15px; font-weight: 700; line-height: 1.4em;}
+.setting_area li span.t3{flex-basis: 30%; flex-shrink: 0; align-content: flex-end; font-size:14px; font-weight: 300; line-height: 1.3em; text-align: right; padding-right:10px}
+.check_slide{flex-basis: 17%; flex-shrink: 0; max-width: 54px; align-content: flex-end}
+.check_slide input[type="checkbox"]+label{display:inline-block; cursor: pointer; background: url(../../images/setting_btn_slide.png) 0 center no-repeat; background-size:contain; background-color: #ccc; width:100%; height:28px; padding:4px; border-radius: 30px}
+.check_slide input[type="checkbox"]:checked+label{background: url(../../images/setting_btn_slide.png) right center no-repeat; background-size:contain; background-color: #24a1e9; width:100%; height:28px; padding:4px; border-radius: 30px}
+
+.active_area ul{display: flex; flex-direction: row; flex-wrap: wrap}
+.active_area li{display:flex; flex-basis: 145px; min-height:218px; flex-grow: 1; flex-direction: column; text-align: center; background: #fff; margin:0 10px 10px 0}
+.active_area li:nth-child(2n){margin-right:0}
+.active_area span.title{flex-basis: 30px; font-size:14px; font-weight: 700; letter-spacing: -0.04em; color: #555; padding:14px 0 0}
+.active_area span.active_img1,.active_area span.active_img2,.active_area span.active_img3,.active_area span.active_img4{flex-basis: auto; flex-shrink: 0; flex-grow: 1;}
+.active_area span.active_img1{background: url(../../images/my_ani01.gif) center no-repeat; background-size:contain}
+.active_area span.active_img2{background: url(../../images/my_ani02.gif) center no-repeat; background-size:contain}
+.active_area span.active_img3{background: url(../../images/my_ani03.gif) center no-repeat; background-size:contain}
+.active_area span.active_img4{background: url(../../images/my_ani04.gif) center no-repeat; background-size:contain}
+.active_area span.t1{flex-basis: 32px; font-size:12px; letter-spacing: -0.075em; line-height: 1.35em; color: #777}
+.active_area span.t2{flex-basis: 30px}
+.active_area span.t2 sub{display: inline-block; font-size:15px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.25em; color: #e94214; border-bottom: 1px solid #e94214}
+.active_area span.t3{flex-basis: 25px; font-size:11px; letter-spacing: -0.075em; color: #a7a7a7}
+
+.maileage{}
+.maileage_tab{}
+.maileage_tab ul{display: flex; flex-direction: row; flex-wrap: nowrap}
+.maileage_tab li{flex-basis: 50%; flex-grow: 1}
+.maileage_tab li span.walk{display: flex; flex-grow: 1; height: 164px; background: url(../../images/mileage_walk.png) center no-repeat; background-size:contain; background-position: center; text-indent: -5000px; overflow: hidden}
+.maileage_tab li span.bicycle{display: flex; flex-grow: 1; height: 164px; background: url(../../images/mileage_bicycle.png) center no-repeat; background-size:contain; background-position: center; text-indent: -5000px; overflow: hidden}
+.maileage_tab li.on span.walk{background: url(../../images/mileage_walk_on.png) center no-repeat; background-size:contain; background-position: center}
+.maileage_tab li.on span.bicycle{background: url(../../images/mileage_bicycle_on.png) center no-repeat; background-size:contain; background-position: center}
+
+.maileage_check{padding:10px 0 0}
+.maileage_check ul{display: flex; flex-direction: row; flex-wrap: wrap}
+.maileage_check li{flex-basis: 50%; flex-grow: 1; margin-top:10px}
+.maileage_check li.on span.btn01{background: url(../../images/mileage_btn01_on.png) right top -15px no-repeat;background-size:auto 148px}
+.maileage_check li.on span.btn02{background: url(../../images/mileage_btn02_on.png) left top -15px no-repeat;background-size:auto 148px}
+.maileage_check li.on span.btn03{background: url(../../images/mileage_btn03_on.png) left top -15px no-repeat;background-size:auto 148px}
+.maileage_check li.on span.btn04{background: url(../../images/mileage_btn04_on.png) right top -15px no-repeat;background-size:auto 148px}
+
+.maileage_check span.btn01,.maileage_check span.btn02,.maileage_check span.btn03,.maileage_check span.btn04{display: block; width:100%; height:132px; text-indent: -5000px; overflow: hidden}
+.maileage_check span.btn01{background: url(../../images/mileage_btn01.png) right top -15px no-repeat; background-size:auto 148px}
+.maileage_check span.btn02{background: url(../../images/mileage_btn02.png) left top -15px no-repeat; background-size:auto 148px}
+.maileage_check span.btn03{background: url(../../images/mileage_btn03.png) left top -15px no-repeat; background-size:auto 148px}
+.maileage_check span.btn04{background: url(../../images/mileage_btn04.png) right top -15px no-repeat; background-size:auto 148px}
+
+
+/** board1 - notice 공지사항 **/
+.board1{}
+.board1 ul{display: flex; flex-direction: column}
+.board1 li{flex-basis:70px; flex-grow: 1; border-radius: 3px; background: #fff; margin-bottom:10px }
+.board1 li .b_head{display: flex; flex-direction: column; background: url(../../images/header_down.png) right 5px top 10px no-repeat; background-size:auto 34px; padding:19px 30px 14px 16px}
+    .b_head span.title{flex-basis: auto; font-size:15px; font-weight: 700; letter-spacing: -0.05em; color: #333; white-space: nowrap; text-overflow: ellipsis;overflow:hidden }
+    .b_head span.title_info{flex-basis: auto; font-size: 9px; clear: #999; margin-top:7px}
+    .b_head span.title_info sub{padding-right:10px}
+    .b_head span.title_info sub:last-child{padding-right:0}
+    .b_body{margin:0 16px; padding:12px 0 20px; border-top:1px solid #bbb}
+    .b_body span.text{font-size: 13px; letter-spacing: -0.05em; line-height: 1.55em; color: #777 }
+
+.board1 li.on .b_head{background: url(../../images/header_up.png) right 5px top 10px no-repeat; background-size:auto 34px}
+.board1 li .b_body{display: none}
+.board1 li.on .b_body{display: block}
+
+/** board2 - history 적립내역 **/
+.board2{border-radius: 3px; overflow: hidden}
+.board2 table{width:100%; border-collapse: collapse}
+.board2 th{font-size:14px; text-align: center; color:#fff; background: #595959; padding:14px 0; }
+.board2 td{font-size:13px; text-align: center; color: #555; border-bottom:1px solid #bbb; padding:15px 0; background: #fff}
+.board2 tfoot td{font-weight: 700; border-bottom:0}
+
+/** opinion - 의견접수  **/
+.opinion{}
+.opinion span.title{display: block; margin-bottom:10px}
+.opinion span.note{display: block}
+
+/** terms **/
+.terms_area{display: block;font-size:12px; letter-spacing: -0.05em; line-height: 1.5em; color: #777; background: #fff; padding:16px 16px 25px; border-radius: 3px}
+.terms_area pre{font-family: 'Noto Sans KR', sans-serif; font-size:12px; letter-spacing: -0.05em; line-height: 1.5em; color: #777; white-space: pre-line; padding:0; margin:0}
+
+/** form **/
+input{width:100%}
+input[type="text"],input[type="password"]{border:1px solid #bbb; height:44px; text-indent:8px; border-radius: 3px}
+input::placeholder{color: #bbb}
+
+input[type="checkbox"]{display:none}
+
+textarea{width:100%; height:260px; line-height: 1.3em; padding:12px; border:1px solid #bbb; border-radius: 3px}
+textarea::placeholder{color: #bbb}
+
+/** popup **/
+.popup{position: fixed; top:0; left:0; width:100%; height: 100%; z-index: 100000}
+.popup_area{position: absolute; top:30%; left:6%; display: inline-block; background: #fff; width:88%; min-height: 140px; margin:0 auto; border-radius: 3px; z-index: 2}
+.popup_area span.text{display: block; font-size:15px; color: #333; letter-spacing: -0.04em; line-height: 1.6em; padding:30px 25px 20px}
+.popup_area span.btn{display: block; text-align: right; padding:0 20px 20px 20px}
+.popup_area span.btn a{display: inline-block; font-size:15px; color:#3c93ff; font-weight: 600; padding:10px 15px}
+
+.check_box a { float: right; } 

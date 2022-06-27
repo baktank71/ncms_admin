@@ -1,0 +1,1054 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cr.ntt">
+
+	<resultMap id="getList" type="egovMap">
+		<result property="CONTENTS" column="CONTENTS"  jdbcType="CLOB" javaType="java.lang.String" />
+	</resultMap>	
+	
+  <!-- 게시글 목록 조회 -->
+  <select id="list"  parameterType="egovMap" resultMap="getList">
+	    SELECT *
+		FROM (		
+			SELECT ROWNUM AS RNUM 
+				  	, aa.*
+			FROM (
+				SELECT CONTENTS_ID
+					 , DIVISION_CODE
+					 , COUNT(*) OVER() AS TOTAL_COUNT
+					 , TITLE
+					 , CONTENTS
+					 , WRITE_USER_ID
+					 , WRITE_NAME
+					 , JBSOURCE
+					 , IS_OPEN
+					 , TO_CHAR(TO_DATE(WRITE_TIME,'yyyymmddhhmiss'),'yyyy-mm-dd') AS write_time
+					 , TO_CHAR(TO_DATE(LAST_MODIFIED,'yyyymmddhhmiss'),'yyyy-mm-dd') AS last_modified
+					 , (SELECT COUNT(contents_id) FROM contents_info_file WHERE contents_id = a.contents_id ) AS file_count
+				FROM CONTENTS_INFO a
+				<if test ='divisionCode != null and divisionCode != ""'>
+				WHERE 1=1
+					<choose>
+						<when test = 'divisionCode == "0331" or divisionCode == "0333"'>
+							<choose>
+								<when test = 'faqId == "A"'>	<!-- SelectBox FAQ[제작관리] -->
+									AND DIVISION_CODE = 0331
+								</when>
+								<when test = 'faqId =="B"'>		<!-- SelectBox FAQ[홈페이지] -->
+									AND DIVISION_CODE = 0333
+								</when>
+								<otherwise>						<!-- FAQ [제작관리, 홈페이지] -->
+									AND DIVISION_CODE IN(0331,0333)
+								</otherwise>				
+							</choose>
+						</when>
+						<when test = 'divisionCode == "0337" or divisionCode == "0339"'>
+							<choose>
+								<when test = 'faqId == "A"'>
+									AND DIVISION_CODE = 0337 
+								</when>
+								<when test = 'faqId == "B"'>
+									AND DIVISION_CODE = 0339
+								</when>
+								<otherwise>
+									AND DIVISION_CODE IN(0337,0339)
+								</otherwise>
+							</choose>
+						</when>
+						<otherwise>
+							AND DIVISION_CODE = #{divisionCode}	<!-- FAQ 외 다른 DivisionCode -->
+						</otherwise>
+					</choose>
+				</if>
+				<!-- SelectBox 및 검색어 쿼리 -->
+				<if test = 'searchStr != null and searchStr != ""'>
+					<choose>
+						<when test = 'searchId == "1"'>
+							AND UPPER(TITLE) LIKE '%' || UPPER(#{searchStr }) || '%'
+						</when>
+						<when test = 'searchId == "2"'>
+							AND UPPER(SUBSTR(CONTENTS, 0, LENGTH(CONTENTS))) LIKE '%' || UPPER(#{searchStr }) || '%'
+						</when>
+						<otherwise>
+							AND (UPPER(TITLE) LIKE '%' || UPPER(#{searchStr }) || '%'
+							OR UPPER(SUBSTR(CONTENTS, 0, LENGTH(CONTENTS))) LIKE '%' || UPPER(#{searchStr }) || '%')
+						</otherwise>
+					</choose>
+				</if>
+				<!-- 날짜 검색 쿼리 -->
+				<if test = 'searchFromDate != null and searchFromDate != ""'>
+					AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[>=]]> TO_DATE(REPLACE(#{searchFromDate}, '-',''), 'yyyymmdd')
+				</if >
+				<if test ='searchToDate != null and searchToDate != ""'>
+					AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[<=]]> TO_DATE(REPLACE(#{searchToDate}, '-',''), 'yyyymmdd')
+				</if>				
+				<!-- 공개 및 비공개버튼 -->
+				<if test = 'searchOpenYn != null and searchOpenYn != ""'>
+					AND IS_OPEN = #{searchOpenYn }
+				</if>
+				ORDER BY CONTENTS_ID DESC, WRITE_TIME DESC
+				) AS aa
+			)
+		WHERE RNUM BETWEEN #{START} AND #{END}
+	</select>
+	
+	<!-- 게시글 상세보기 -->
+	<select id="detail" parameterType="egovMap" resultMap="getList">
+		SELECT 	CONTENTS_ID
+			,	DIVISION_CODE
+			,	TITLE
+			,	TITLE_DC
+			,	CONTENTS
+			,	WRITE_USER_ID
+			,	WRITE_NAME
+			,	JBSOURCE
+			,	READ_COUNT
+			,	IS_OPEN
+			,	TO_CHAR(TO_DATE(WRITE_TIME, 'yyyymmddhhmiss'),'yyyy-mm-dd') AS write_time
+			,	TO_CHAR(TO_DATE(LAST_MODIFIED, 'yyyymmddhhmiss'), 'yyyy-mm-dd') AS last_modified
+		FROM	CONTENTS_INFO
+		WHERE	CONTENTS_ID = #{contentsId}
+	</select>
+	
+	<!-- 게시글 상세보기 파일 리스트 -->
+	<select id="detailFile" parameterType="String" resultType="egovMap">
+		SELECT 	FILE_ID
+			,	ATTACHMENT
+			,	ATTACHMENT_ORIGINAL
+			,	SERVER_PATH
+		FROM CONTENTS_INFO_FILE
+		WHERE CONTENTS_ID = #{contentsId }
+	</select>
+	
+	<!-- 이전글 & 다음글 -->
+	<select id="preNext" parameterType="egovMap" resultMap="getList">
+		SELECT
+			a.CONTENTS_ID, a.TITLE
+		FROM
+			CONTENTS_INFO a,
+		( SELECT 
+			<if test='preNext == "pre"'>
+				MIN(CONTENTS_ID) as CONTENTS_ID
+			</if>
+			<if test='preNext == "next"'>
+				MAX(CONTENTS_ID) as CONTENTS_ID
+			</if>
+		FROM CONTENTS_INFO
+		WHERE 1=1
+		<if test='divisionCode != null and divisionCode != ""'>
+			AND DIVISION_CODE = #{divisionCode }
+		</if>
+		<if test = 'searchStr != null and searchStr != ""'>
+			<choose>
+				<when test='searchId == "1"'>
+					AND UPPER(title) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when>
+				<when test='searchId == "2"'>
+					AND SUBSTR(contents, 0, LENGTH(contents)) LIKE '%' || #{searchStr } || '%'
+				</when>
+				<otherwise>
+					AND (UPPER(title) LIKE '%' || UPPER(#{searchStr }) || '%'
+					OR SUBSTR(contents, 0, LENGTH(contents)) LIKE '%' || #{searchStr } || '%')
+				</otherwise>
+			</choose>
+		</if>
+		
+		<!-- 공개 비공개에 따라서 값 비교 -->
+<!-- 		<choose> -->
+<!-- 			<when test= 'isOpen != null and isOpen != ""'> -->
+<!-- 				AND IS_OPEN = #{isOpen } -->
+<!-- 			</when> -->
+<!-- 			<otherwise></otherwise> -->
+<!-- 		</choose> -->
+		
+		<!-- 검색 했음과 안했음와의 차이 -->
+		<if test = 'searchFromDate != null and searchFromDate != ""'>
+				AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[>=]]> TO_DATE(REPLACE(#{searchFromDate}, '-',''), 'yyyymmdd')
+		</if>
+		<if test ='searchToDate != null and searchToDate != ""'>
+				AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[<=]]> TO_DATE(REPLACE(#{searchToDate}, '-',''), 'yyyymmdd')
+		</if>
+		
+		<if test='preNext == "pre"'>
+			AND CONTENTS_ID <![CDATA[ > ]]> #{contentsId }
+		</if>
+		
+		<if test='preNext == "next"'>
+			AND CONTENTS_ID <![CDATA[ < ]]> #{contentsId }
+		</if>
+		) b
+		WHERE a.CONTENTS_ID = b.CONTENTS_ID
+	</select>
+	
+	<!-- 게시글 수정 -->
+	<update id="update" parameterType="egovMap">
+		UPDATE CONTENTS_INFO
+		SET
+			DIVISION_CODE = #{divisionCode },
+			IS_OPEN = #{isOpen },
+			TITLE = #{title },
+			CONTENTS = #{contents },
+		<if test='jbsource != null and jbsource != ""'>
+			JBSOURCE = #{jbsource },
+		</if>
+		<if test='titleDc != null and titleDc != ""'>
+			TITLE_DC = #{titleDc },
+		</if>
+			LAST_MODIFIED = TO_CHAR(SYSDATE, 'YYYYMMDDhhmiss')
+		WHERE 1=1
+		AND CONTENTS_ID = #{contentsId }
+	</update>
+
+
+	<!-- 게시글 등록 -->
+	<insert id="insert" parameterType="egovMap">
+		<selectKey keyProperty="contentsIdIndex" resultType="integer" order="AFTER">
+			SELECT SQ_CONTENTSID_INDEX.CURRVAL FROM DUAL
+		</selectKey>
+		INSERT INTO CONTENTS_INFO (
+			CONTENTS_ID,
+			DIVISION_CODE,
+			TITLE,
+			TITLE_DC,
+			CONTENTS,
+			WRITE_NAME,
+			WRITE_TIME,
+			READ_COUNT,
+			IS_OPEN,
+			JBSOURCE,
+			WRITE_USER_ID
+		)
+		VALUES (
+			SQ_CONTENTSID_INDEX.NEXTVAL,
+			#{divisionCode },
+			#{title },
+			#{titleDc },
+			#{contents },
+			#{userNm },
+			TO_CHAR(SYSDATE, 'YYYYMMDDhhmiss'),
+			0,
+			#{isOpen },
+			#{jbsource },
+			#{userId }
+		)
+	</insert>
+
+	<!-- 게시글 삭제 -->	
+	<delete id="delete" parameterType="egovMap">
+		DELETE FROM CONTENTS_INFO
+		WHERE CONTENTS_ID = #{contentsId }
+	</delete>
+	
+	<!-- 컨텐츠 공유/비공유 여부 수정 -->
+	<update id="updateOpenYn" parameterType="egovMap">
+		UPDATE CONTENTS_INFO
+		SET IS_OPEN = #{isOpen }
+		WHERE CONTENTS_ID IN
+ 		<foreach collection="contentsIdList" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	
+	
+	<!-- 무상점검수리 목록 조회 -->
+	<select id="listGrts" parameterType="egovMap" resultMap="getList">
+	    SELECT *
+		FROM (		
+			SELECT ROWNUM AS RNUM 
+				  	, aa.*
+			FROM (
+				SELECT 
+				  GRATISCHECK_ID, 
+				  GRATISCHECK_TITLE,
+				  GRATISCHECK_SOURCE,
+				  'O' AS CTYPE,
+				  READ_COUNT,
+				  TO_CHAR(REG_DATE,'yyyy-mm-dd') AS REG_DATE,
+				  (SELECT COUNT(GRATISCHECK_ID) FROM GRATISCHECK_INFO_FILE WHERE GRATISCHECK_ID = A.GRATISCHECK_ID ) AS FILE_COUNT,
+				  PRODUCT_NAME,
+				  COUNT(*) OVER() AS TOTAL_COUNT,
+				  IS_OPEN, 
+				  SNS_OPEN
+				FROM GRATISCHECK_INFO a
+				WHERE 1=1
+				<if test ='searchStr != null and searchStr != ""'>
+					<choose>
+						<when test ='searchId == "1"'>
+						AND UPPER(gratischeck_title) LIKE '%' || UPPER(#{searchStr}) || '%'
+						</when> 
+						<when test ='searchId == "2"'>
+						AND UPPER(gratischeck_source) LIKE '%' || UPPER(#{searchStr}) || '%'
+						</when> 
+						<when test ='searchId == "3"'>
+						AND UPPER(product_name) LIKE '%' || UPPER(#{searchStr}) || '%'
+						</when> 
+						<otherwise>
+						AND (UPPER(gratischeck_title) LIKE '%' || UPPER(#{searchStr}) || '%'
+						 OR  UPPER(gratischeck_source)  LIKE '%' || UPPER(#{searchStr}) || '%'
+						 OR  UPPER(product_name)  LIKE '%' || UPPER(#{searchStr}) || '%')
+						</otherwise>
+					</choose>
+				</if> 
+				<if test ='searchFromDate != null and searchFromDate != ""'>
+					AND reg_date <![CDATA[>=]]> TO_DATE(REPLACE(#{searchFromDate}, '-',''), 'yyyymmdd')
+				</if> 
+				<if test ='searchToDate != null and searchToDate != ""'>
+					AND reg_date <![CDATA[<=]]> TO_DATE(REPLACE(#{searchToDate}, '-',''), 'yyyymmdd')
+				</if> 			
+				<if test = 'searchOpenYn != null and searchOpenYn != ""'>
+					AND is_open = #{searchOpenYn }
+				</if>
+				ORDER BY gratischeck_id DESC
+				) AS aa
+			)
+		WHERE 1=1
+		AND RNUM BETWEEN #{START} AND #{END}
+	</select>
+	
+	<!-- 무상점검수리 상세보기 -->
+	<select id="detailGrts" parameterType="egovMap" resultMap="getList">
+		SELECT gratischeck_id, gratischeck_title, gratischeck_source, read_count
+		, substr(corrective_information,0,length(corrective_information)) AS corrective_information
+		, product_name, year_type
+		, (SELECT code_value FROM common_code WHERE maincode='VI1' AND subcode = original_make_code ) original_make_code_name
+		, TO_CHAR(product_date_from,'yyyy-mm-dd') as product_date_from
+		, TO_CHAR(product_date_to,'yyyy-mm-dd') as product_date_to
+		, TO_CHAR(gratischeck_date_from,'yyyy-mm-dd') as gratischeck_date_from
+		, TO_CHAR(gratischeck_date_to,'yyyy-mm-dd') as gratischeck_date_to
+		, car_count
+		, substr(recover_method,0,length(recover_method)) AS recover_method
+		, further_information, reg_user_id
+		, TO_CHAR(reg_date,'yyyy-mm-dd') as reg_date
+		, 'O' ctype
+ 		, 1 product_cnt 
+ 		, IS_OPEN
+ 		, SNS_OPEN
+ 		FROM GRATISCHECK_INFO 
+ 		WHERE GRATISCHECK_ID = #{gratischeckId }  
+	</select>
+	<!-- 무상점검수리 파일 -->
+	<select id="infoGrtsFileList" parameterType="String" resultType="egovMap">
+		SELECT file_id, attachment, attachment_original, server_path 
+		FROM gratischeck_info_file 
+		WHERE gratischeck_id = #{gratischeckId} 
+		ORDER BY file_id ASC
+	</select>
+	
+	<!-- 무상점검수리 공개/비공개 여부 수정 -->
+	<update id="updateOpenYnGrts" parameterType="egovMap">
+		UPDATE GRATISCHECK_INFO
+		SET IS_OPEN = #{isOpen }
+		WHERE GRATISCHECK_ID IN
+ 		<foreach collection="contentsIdList" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<!-- 무상점검수리 SNS공유/비공유 여부 수정 -->
+	<update id="updateSnsYnGrts" parameterType="egovMap">
+		UPDATE GRATISCHECK_INFO
+		SET SNS_OPEN = #{isOpen }
+		WHERE GRATISCHECK_ID IN
+ 		<foreach collection="contentsIdList" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	
+	<!-- 팝업존 목록 -->
+	<select id="listPopup" parameterType="egovMap" resultMap="getList">
+		SELECT * FROM 
+		(
+			SELECT ROWNUM RNUM, aa.* 
+			FROM 
+			(
+				SELECT 
+					  a.banner_id, a.banner_title, a.banner_link_target
+					, a.banner_sort, a.banner_use, a.banner_period
+					, TO_CHAR(a.insert_date, 'yyyy-mm-dd') AS insert_date
+					, TO_CHAR(a.banner_start_date, 'yyyy-mm-dd') AS banner_start_date
+					, TO_CHAR(a.banner_start_date, 'hh24') AS banner_start_hour
+					, TO_CHAR(a.banner_start_date, 'mi') AS banner_start_minute
+					, TO_CHAR(a.banner_end_date, 'yyyy-mm-dd') AS banner_end_date
+					, TO_CHAR(a.banner_end_date, 'hh24') AS banner_end_hour
+					, TO_CHAR(a.banner_end_date, 'mi') AS banner_end_minute 
+				  	, COUNT(*) OVER() AS TOTAL_COUNT
+				FROM eptn_banner a
+				WHERE 1=1
+				<if test ='searchUseYn != null and searchUseYn != ""'>
+					AND a.banner_use = #{searchUseYn}
+				</if> 
+				ORDER BY banner_id DESC
+			) AS aa
+		) 	
+		WHERE RNUM BETWEEN #{START} AND #{END}	
+	</select>
+	
+	<!-- 팝업존 상세보기 -->
+	<select id="detailPopup" parameterType="egovMap" resultMap="getList">
+		SELECT banner_id, banner_title, banner_type, banner_use, banner_sort, banner_period
+			 , TO_CHAR(banner_start_date, 'yyyy-mm-dd') AS banner_start_date
+			 , TO_CHAR(banner_start_date, 'hh24') AS banner_start_hour
+			 , TO_CHAR(banner_start_date, 'mi') AS banner_start_minute
+			 , TO_CHAR(banner_end_date, 'yyyy-mm-dd') AS banner_end_date
+			 , TO_CHAR(banner_end_date, 'hh24') AS banner_end_hour
+			 , TO_CHAR(banner_end_date, 'mi') AS banner_end_minute
+			 , banner_link_url, banner_link_target, banner_image
+			 , substr(banner_contents,0,length(banner_contents)) AS banner_contents
+			 , insert_id, TO_CHAR(insert_date, 'yyyy-mm-dd') AS insert_date
+ 		FROM EPTN_BANNER 
+ 		WHERE BANNER_ID = #{bannerId }  
+	</select> 
+	
+	<!-- 팝업존 Max -->
+	<select id="maxPopCount" resultType="int">
+		SELECT MAX_POP_CNT FROM EPTN_BANNER_CTRL WHERE ID = 1
+	</select>
+	
+	<!-- 팝업존 Max 변경 -->
+	<update id="updateMaxPopCount" parameterType="egovMap">
+		UPDATE EPTN_BANNER_CTRL SET MAX_POP_CNT = #{maxPopCnt} WHERE ID = 1
+	</update>
+	
+	<!-- 팝업존 등록 -->
+	<insert id="insertPopup" parameterType="egovMap">
+		<selectKey keyProperty="contentsIdIndex" resultType="integer" order="AFTER">
+			SELECT SQ_BANNERID_INDEX.CURRVAL FROM DUAL
+		</selectKey>
+		INSERT INTO eptn_banner (
+			banner_id,
+			banner_title,
+			banner_type,
+			banner_use, 
+			banner_sort, 
+			banner_period, 
+			banner_start_date, 
+			banner_end_date, 
+			banner_link_url, 
+			banner_link_target, 
+			banner_image, 
+			banner_contents, 
+			insert_date, 
+			update_id, 
+			update_date, 
+			insert_id
+		)
+		VALUES (
+			SQ_BANNERID_INDEX.NEXTVAL,
+			#{bannerTitle },
+			#{bannerType },
+			#{bannerUse },
+			#{bannerSort },
+			#{bannerPeriod },
+			TO_DATE(SUBSTR(#{bannerStartDate }, 1, 14), 'yyyymmddhh24miss'),
+			TO_DATE(SUBSTR(#{bannerEndDate }, 1, 14), 'yyyymmddhh24miss'),
+			#{bannerLinkUrl },
+			#{bannerLinkTarget },
+			#{bannerImage },
+			#{bannerContents },
+			SYSDATE,
+			#{userId },
+			SYSDATE,
+			#{userId }			
+		)
+	</insert>
+	
+	<!-- 팝업존 이미지 등록-->
+	<update id="uploadPopImg" parameterType="egovMap">
+		UPDATE eptn_banner 
+		SET banner_image = #{bannerImage }
+		WHERE banner_id = #{bannerId }
+	</update>
+	
+	<!-- 대표 이미지 등록-->
+	<update id="uploadRepImg" parameterType="egovMap">
+		UPDATE contents_info 
+		SET title_dc = #{repImage }
+		WHERE contents_id = #{contentsId }
+	</update>
+	
+	<!-- 팝업존 수정 -->
+	<update id="updatePopup" parameterType="egovMap">
+		UPDATE eptn_banner 
+		SET banner_title = #{bannerTitle }
+		, banner_type = #{bannerType }
+		, banner_use = #{bannerUse }
+		, banner_sort = #{bannerSort }
+		, banner_period = #{bannerPeriod }
+		, banner_start_date = TO_DATE(SUBSTR(#{bannerStartDate }, 1, 14), 'yyyymmddhh24miss')
+		, banner_end_date = TO_DATE(SUBSTR(#{bannerEndDate }, 1, 14), 'yyyymmddhh24miss')
+		, banner_link_url = #{bannerLinkUrl }
+		, banner_link_target = #{bannerLinkTarget }
+		, banner_contents = #{bannerContents }
+		, update_id = #{userId }
+		, update_date = SYSDATE 
+		WHERE banner_id = #{bannerId }
+	</update>
+
+	<!-- 팝업존 삭제 -->	
+	<delete id="deletePopup" parameterType="egovMap">
+		DELETE FROM eptn_banner
+		WHERE banner_id = #{bannerId }
+	</delete>
+	
+	<!-- 팝업존 대상 목록 조회 -->
+	<select id="selectPopupTargetList" parameterType="egovMap" resultType="egovMap">
+		SELECT PAGING.* 
+			 , COUNT(*) OVER() AS TOTAL_COUNT
+		  FROM ( 
+				SELECT contents_id, division_code, title
+				FROM contents_info 
+				<choose>
+					<when test='srchTrgDivCd != null and !srchTrgDivCd.equals("")'>
+					WHERE division_code = #{srchTrgDivCd}
+					</when>
+					<otherwise>
+					WHERE division_code = '0402'
+					</otherwise>
+				</choose>
+                	AND is_open = 'Y'
+				<if test='srchWrd != null and !srchWrd.equals("")'>
+					AND UPPER(title) LIKE '%'|| UPPER(#{srchWrd}) ||'%'  
+				</if>
+                ORDER BY contents_id desc
+			) PAGING 
+		LIMIT #{startNum}, #{recordCount}
+	</select>
+	
+	<!-- 리콜현황 목록 조회 -->
+	<select id="listRcInfo1" parameterType="egovMap" resultType="egovMap">
+		SELECT a.recall_id, a.ctype, a.original_make_code
+			 , (SELECT code_value FROM common_code WHERE maincode='VI1' AND subcode = a.original_make_code) AS original_make_code_name
+			 , a.recall_title, a.recall_source, a.read_count, a.is_open
+			 , TO_CHAR(a.reg_date, 'YYYY-MM-DD') AS reg_date
+			 , TO_CHAR(sysdate, 'YYYY-MM-DD') AS current_date
+			 , TO_CHAR(a.recall_date_from, 'YYYY-MM-DD') AS recall_date_from
+			 , TO_CHAR(a.recall_date_to, 'YYYY-MM-DD') AS recall_date_to
+			 , TO_CHAR(a.recall_date_from, 'yyyy') AS recall_year
+		 	 , TO_CHAR(ADD_MONTHS(a.recall_date_from, 18), 'YYYY-MM-DD') AS recall_poing_to
+		 	 , a.organ, b.product_name, b.sns_open
+		 	 , COUNT(*) OVER() AS TOTAL_COUNT
+		FROM v_recall_search a
+		LEFT OUTER JOIN v_recall_info b on a.recall_id = b.recall_id
+		WHERE 1=1
+		AND TO_CHAR(a.recall_date_from,'YYYYMMDD') <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYYMMDD') 
+		<if test = 'searchStr != null and searchStr != ""'>
+			<choose>
+				<when test = 'searchId == "1"'>
+					AND UPPER(a.recall_title) LIKE '%' || UPPER(#{searchStr }) || '%'
+				</when>
+				<when test = 'searchId == "2"'>
+					AND UPPER(a.recall_source) LIKE '%' || UPPER(#{searchStr }) || '%'
+				</when>
+				<when test = 'searchId == "3"'>
+					AND UPPER(b.product_name) LIKE '%' || UPPER(#{searchStr }) || '%'
+				</when>
+				<otherwise>
+					AND (UPPER(a.recall_title) LIKE '%' || UPPER(#{searchStr }) || '%'
+					OR UPPER(a.recall_source) LIKE '%' || UPPER(#{searchStr }) || '%'
+					OR UPPER(b.product_name) LIKE '%' || UPPER(#{searchStr }) || '%')
+				</otherwise>
+			</choose>
+		</if>
+		<if test = 'searchFromDate != null and searchFromDate != ""'>
+<!-- 			AND TO_CHAR(a.recall_date_from, 'yyyy-mm-dd') <![CDATA[>=]]> #{searchFromDate } -->
+				AND TO_CHAR(a.reg_date, 'yyyy-mm-dd') <![CDATA[>=]]> #{searchFromDate }
+		</if>
+		<if test ='searchToDate != null and searchToDate != ""'>
+<!-- 			AND TO_CHAR(a.recall_date_to, 'yyyy-mm-dd') <![CDATA[<=]]> #{searchToDate } -->
+				AND TO_CHAR(a.reg_date, 'yyyy-mm-dd') <![CDATA[<=]]> #{searchToDate }
+		</if>
+		<if test = 'searchOpenYn != null and searchOpenYn != ""'>
+			AND a.is_open = #{searchOpenYn }
+		</if>
+		ORDER BY a.recall_id DESC
+		LIMIT #{START}, #{recordCount}
+	</select>
+	<select id="listRcInfo2" parameterType="egovMap" resultType="egovMap">
+	    SELECT *
+		FROM (		
+			SELECT ROWNUM AS RNUM 
+				  	, aa.*
+			FROM (
+				SELECT board_id, division_code, title, substr(contents,0,length(contents)) AS contents
+					, write_user_id, write_name, jbsource, read_count, is_open, sns_open
+					, TO_CHAR(TO_DATE(write_time,'yyyymmddhhmiss'),'yyyy-mm-dd') AS reg_date
+					, (SELECT COUNT(board_id) FROM CONST_MACHINE_BOARD_FILE WHERE board_id = a.board_id ) AS file_count
+		 			, COUNT(*) OVER() AS TOTAL_COUNT 
+				FROM CONST_MACHINE_BOARD a 
+				WHERE division_code = 1001
+		<if test = 'searchStr != null and searchStr != ""'>
+			<choose>
+				<when test = 'searchId == "1"'>
+					AND UPPER(title) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when>
+				<when test = 'searchId == "2"'>
+					AND SUBSTR(contents,0,LENGTH(contents)) LIKE '%' || #{searchStr} || '%'
+				</when>
+				<otherwise>
+					AND (UPPER(title) LIKE '%' || UPPER(#{searchStr}) || '%' 
+					 OR SUBSTR(contents, 0, LENGTH(contents)) LIKE '%' || #{searchStr} || '%')
+				</otherwise>
+			</choose>
+		</if>
+		<if test ='searchFromDate != null and searchFromDate != ""'>
+				AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[>=]]> TO_DATE(REPLACE(#{searchFromDate}, '-',''), 'yyyymmdd')
+<!-- 			AND SUBSTR(write_time, 1, 8) <![CDATA[>=]]> #{searchFromDate } -->
+		</if> 
+		<if test ='searchToDate != null and searchToDate != ""'>
+				AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[<=]]> TO_DATE(REPLACE(#{searchToDate}, '-',''), 'yyyymmdd')
+<!-- 			AND SUBSTR(write_time, 1, 8) <![CDATA[<=]]> #{searchToDate } -->
+		</if> 
+		<if test = 'searchOpenYn != null and searchOpenYn != ""'>
+				AND is_open = #{searchOpenYn }
+		</if>
+				ORDER BY board_id DESC
+				) AS aa
+			)
+		WHERE 1=1
+		AND RNUM BETWEEN #{START} AND #{END}
+	</select>
+	
+	
+	
+	<!-- 리콜현황 상세 -->	
+	<!-- <select id="detailRcInfo1" parameterType="egovMap" resultType="egovMap">
+		SELECT recall_id, recall_title, recall_source, reg_date
+			,  read_count, original_make_code, original_make_code_name
+			,  product_name, product_cnt, is_open
+			,  product_date_from, product_date_to, recall_date_from, recall_date_to
+			,  recall_car_count, corec_trget_co, correct_car_count
+			, (recall_car_count - correct_car_count) AS NON_RECALL_CAR_COUNT
+			, (correct_car_count * 100 / recall_car_count) AS COREC_RT
+			, (case when current_date <![CDATA[<]]> recall_poing_to then 'isRecall' else 'notRecall' end) recall_gubun
+			,  petition_division_code, petition_division_name
+			,  faulty_information, recover_method, further_information
+		FROM
+		(
+			SELECT a.recall_id, a.recall_title, a.recall_source
+				, TO_CHAR(a.reg_date, 'YYYY-MM-DD') AS reg_date
+				, read_count, a.original_make_code
+				, (SELECT code_value FROM common_code WHERE maincode='VI1' AND subcode = a.original_make_code) AS original_make_code_name
+				, a.product_name, a.product_cnt, is_open
+				, TO_CHAR(a.product_date_from, 'YYYY-MM-DD') AS product_date_from
+				, TO_CHAR(a.product_date_to, 'YYYY-MM-DD') AS product_date_to
+				, TO_CHAR(a.recall_date_from, 'YYYY-MM-DD') AS recall_date_from
+				, TO_CHAR(a.recall_date_to, 'YYYY-MM-DD') AS recall_date_to
+				, TO_CHAR(SYSDATE, 'YYYY-MM-DD') current_date
+				, TO_CHAR(ADD_MONTHS(a.recall_date_from, 18), 'YYYY-MM-DD') AS recall_poing_to
+				, a.recall_car_count
+				, a.recall_car_count AS corec_trget_co
+				, (SELECT nvl(sum(correct_car_count),0) FROM recall_correct_detail X WHERE a.recall_id = X.recall_id ) correct_car_count
+				, a.petition_division_code
+				, (SELECT division_name FROM eptn_petition_division WHERE petition_division_code = a.petition_division_code) AS petition_division_name
+				, a.faulty_information, a.recover_method, a.further_information
+			FROM recall_info a 
+			WHERE a.recall_id = #{recallId}
+		)
+	</select> -->
+	<select id="detailRcInfo1" parameterType="egovMap" resultType="egovMap">
+		SELECT recall_id, recall_title, recall_source, reg_date
+			,  read_count, original_make_code, original_make_code_name
+			,  product_name, product_cnt, is_open, sns_open
+			,  product_date_from, product_date_to, recall_date_from, recall_date_to
+			,  recall_car_count, non_crct_cnt, crct_rate
+			, (case when current_date <![CDATA[<]]> recall_poing_to then 'isRecall' else 'notRecall' end) recall_gubun
+			,  petition_division_code, petition_division_name
+			,  faulty_information, recover_method, further_information
+		FROM
+		(
+			SELECT a.recall_id, a.recall_title, a.recall_source
+				, TO_CHAR(a.reg_date, 'YYYY-MM-DD') AS reg_date
+				, read_count, a.original_make_code
+				, (SELECT code_value FROM common_code WHERE maincode='VI1' AND subcode = a.original_make_code) AS original_make_code_name
+				, a.product_name, a.product_cnt, is_open, sns_open
+				, TO_CHAR(a.product_date_from, 'YYYY-MM-DD') AS product_date_from
+				, TO_CHAR(a.product_date_to, 'YYYY-MM-DD') AS product_date_to
+				, TO_CHAR(a.recall_date_from, 'YYYY-MM-DD') AS recall_date_from
+				, TO_CHAR(a.recall_date_to, 'YYYY-MM-DD') AS recall_date_to
+				, TO_CHAR(SYSDATE, 'YYYY-MM-DD') current_date
+				, TO_CHAR(ADD_MONTHS(a.recall_date_from, 18), 'YYYY-MM-DD') AS recall_poing_to
+				, a.recall_car_count
+				, a.petition_division_code
+				, (SELECT division_name FROM eptn_petition_division_oper WHERE petition_division_code = a.petition_division_code) AS petition_division_name
+				, a.faulty_information, a.recover_method, a.further_information
+				, b.non_crct_cnt, b.crct_rate
+			FROM recall_info a 
+			LEFT OUTER JOIN tb_recall_crct_mapp b ON a.recall_id = b.recall_id
+			WHERE a.recall_id = #{recallId}
+		)
+	</select>
+	
+	<!-- 리콜현황 파일 -->
+	<select id="rcInfoFileList1" parameterType="String" resultType="egovMap">
+		SELECT file_id, attachment, attachment_original, server_path 
+		FROM recall_info_file 
+		WHERE recall_id = #{recallId} 
+		ORDER BY file_id ASC
+	</select>
+	
+	<select id="detailRcInfo2" parameterType="egovMap" resultType="egovMap">
+		SELECT a.recall_id, a.recall_title, a.recall_source
+			, TO_CHAR(a.reg_date, 'YYYY-MM-DD') AS reg_date
+			, read_count, a.original_make_code, is_open, sns_open
+			, (SELECT code_value FROM common_code WHERE maincode='VI1' AND subcode = a.original_make_code) AS original_make_code_name
+			, a.product_name, b.cnm, a.product_cnt
+			, TO_CHAR (DECODE(length(b.MNFCT_BGNDE), 0, null, 6, TO_DATE(b.MNFCT_BGNDE, 'YYYYMM'), 8, TO_DATE(b.MNFCT_BGNDE, 'YYYYMMDD') ), 'YYYY-MM-DD') AS product_date_from
+			, TO_CHAR (DECODE(length(b.MNFCT_ENDDE), 0, null, 6, TO_DATE(b.MNFCT_ENDDE, 'YYYYMM'), 8, TO_DATE(b.MNFCT_ENDDE, 'YYYYMMDD') ), 'YYYY-MM-DD') AS product_date_to
+			, a.recall_date_from, a.recall_date_to, a.recall_car_count, b.corec_trget_co
+			, a.petition_division_code
+			, a.petition_division_name
+			, a.faulty_information, a.recover_method, a.further_information
+		FROM v_recall_info a, TN_CVPL_MNFSTC_VHCTY b
+		WHERE a.recall_id = b.REQST_NO 
+		AND a.recall_id = #{recallId}
+	</select>
+	
+	<select id="rcInfoFileList2" parameterType="String" resultType="egovMap">
+		SELECT file_id, REQST_NO attachment
+			, (SELECT CODE_VALUE FROM COMMON_CODE WHERE MAINCODE='R01' AND SUBCODE = A.ATCH_FILE_SE_CODE) AS attachment_original
+			,  FILE_URL AS server_path   
+		FROM TN_CVPL_MNFSTC_ATCH A  
+		WHERE REQST_NO = #{recallId}  
+		ORDER BY ATCH_FILE_DETAIL_SN ASC
+	</select>
+	
+	<select id="detailRcInfo3" parameterType="egovMap" resultType="egovMap">
+		SELECT board_id, division_code, title
+			 , substr(contents,0,length(contents)) AS contents
+			 , write_user_id, write_name, jbsource, read_count, is_open, sns_open
+			 , TO_CHAR(TO_DATE(write_time,'yyyymmddhhmiss'),'yyyy-mm-dd') AS write_time
+			 , TO_CHAR(TO_DATE(last_modified,'yyyymmddhhmiss'),'yyyy-mm-dd') AS last_modified 
+		FROM CONST_MACHINE_BOARD 
+		WHERE board_id = #{recallId}
+	</select>
+	
+	<select id="rcInfoFileList3" parameterType="String" resultType="egovMap">
+		SELECT file_id, attachment, attachment_original, server_path 
+		FROM CONST_MACHINE_BOARD_FILE 
+		WHERE board_id = #{recallId}  
+	</select>
+	
+	<!-- 건설기계 이전글 다음글-->
+	<select id="preNext2" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+			a.board_id, a.title
+		FROM 
+			CONST_MACHINE_BOARD a, 
+		  (	SELECT 
+				<if test ='preNext == "pre"'>
+				MIN(board_id) as board_id
+				</if>
+				<if test ='preNext == "next"'>
+				MAX(board_id) as board_id
+				</if>
+			 FROM 
+			 	CONST_MACHINE_BOARD
+			WHERE DIVISION_CODE = 1001
+		<if test = 'searchStr != null and searchStr != ""'>
+			<choose>
+				<when test = 'searchId == "1"'>
+					AND UPPER(title) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when>
+				<when test = 'searchId == "2"'>
+					AND SUBSTR(contents,0,LENGTH(contents)) LIKE '%' || #{searchStr} || '%'
+				</when>
+				<otherwise>
+					AND (UPPER(title) LIKE '%' || UPPER(#{searchStr}) || '%' 
+					 OR SUBSTR(contents, 0, LENGTH(contents)) LIKE '%' || #{searchStr} || '%')
+				</otherwise>
+			</choose>
+		</if>
+		<if test ='searchFromDate != null and searchFromDate != ""'>
+			AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[>=]]> TO_DATE(REPLACE(#{searchFromDate}, '-',''), 'yyyymmdd')
+		</if> 
+		<if test ='searchToDate != null and searchToDate != ""'>
+			AND TO_DATE(SUBSTR(WRITE_TIME,1,8), 'yyyymmdd') <![CDATA[<=]]> TO_DATE(REPLACE(#{searchToDate}, '-',''), 'yyyymmdd')
+		</if> 
+		<if test ='preNext == "pre"'>
+			AND board_id <![CDATA[ > ]]> #{recallId}
+		</if>
+		<if test ='preNext == "next"'>
+			AND board_id <![CDATA[ < ]]> #{recallId}
+		</if>
+		) b
+		WHERE a.board_id = b.board_id	
+	</select>
+	
+	<!-- 리콜현황 공개/비공개 여부 수정 -->
+	<update id="updateOpenYnRcInfoO" parameterType="egovMap">
+		UPDATE RECALL_INFO
+		SET IS_OPEN = #{isOpen }
+		WHERE RECALL_ID IN
+ 		<foreach collection="contentsIdListO" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<update id="updateOpenYnRcInfo" parameterType="egovMap">
+		UPDATE TN_CVPL_MNFSTC_DETAIL
+		SET IS_OPEN = #{isOpen }
+		WHERE REQST_NO IN
+ 		<foreach collection="contentsIdList" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<update id="updateOpenYnRcInfoC" parameterType="egovMap">
+		UPDATE CONST_MACHINE_BOARD
+		SET IS_OPEN = #{isOpen }
+		WHERE BOARD_ID IN
+ 		<foreach collection="contentsIdListC" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<!-- 리콜현황 SNS공유/비공유 여부 수정 -->
+	<update id="updateSnsYnRcInfoO" parameterType="egovMap">
+		UPDATE RECALL_INFO
+		SET SNS_OPEN = #{isOpen }
+		WHERE RECALL_ID IN
+ 		<foreach collection="contentsIdListO" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<update id="updateSnsYnRcInfo" parameterType="egovMap">
+		UPDATE TN_CVPL_MNFSTC_DETAIL
+		SET SNS_OPEN = #{isOpen }
+		WHERE REQST_NO IN
+ 		<foreach collection="contentsIdList" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<update id="updateSnsYnRcInfoC" parameterType="egovMap">
+		UPDATE CONST_MACHINE_BOARD
+		SET SNS_OPEN = #{isOpen }
+		WHERE BOARD_ID IN
+ 		<foreach collection="contentsIdListC" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	
+	
+	<!-- 신고내역 목록 조회 -->
+	<select id="listSttemnt" parameterType="egovMap" resultType="egovMap">
+	    SELECT *
+		FROM (	
+			SELECT ROWNUM AS RNUM 
+				  	, aa.*
+			FROM (
+		SELECT petition_type
+			 , petition_id
+			 , petition_open_degree
+			 , petition_title
+			 , eptn_status
+			 , FN_GET_CODE_NM('AS9', eptn_status) AS eptn_status_name
+			 , name 
+			 , to_char(to_date(substr(write_time,1,8),'yyyymmdd'), 'yyyy-mm-dd') AS write_time
+			 , read_count
+			 , resident_id
+			 , sns_open
+			 , COUNT(*) OVER() AS TOTAL_COUNT
+		FROM (
+			SELECT 
+				 'EP' as petition_type, a.PETITION_ID, a.petition_open_degree
+				, a.petition_title, a.eptn_status, a.name, a.write_time, a.read_count, a.resident_id
+				, b.product_name as product_name, SNS_OPEN
+			  FROM eptn_petition a
+			  LEFT OUTER JOIN petition_receipt c ON ( a.petition_id = c.petition_id ), vehicle_info b 
+			 WHERE a.vehicle_info_id = b.vehicle_info_id 
+			   AND a.recp_path in ('001','002','004') 
+			   AND ( c.info_type <![CDATA[<>]]> 'N' or c.info_type is null )
+			UNION ALL
+			SELECT 
+				 'CMR' as petition_type, petition_id, petition_open_degree
+				, petition_title, eptn_status, name, write_time, read_count, resident_id
+				, '' as product_name, SNS_OPEN
+			  FROM const_machine_report report 
+			 WHERE report.recp_path in ('001','002','004')
+			UNION ALL
+			SELECT 
+				 'RDM' as petition_type, a.petition_id, a.petition_open_degree
+				, a.petition_title, a.eptn_status, a.name, a.write_time, a.read_count, a.resident_id
+				, '' as product_name, SNS_OPEN
+			  FROM RECALL_DIS_MASTER a, vehicle_info b
+ 			 WHERE a.vehicle_info_id = b.vehicle_info_id 	
+			) b
+			WHERE 1=1
+		<!-- <if test ='ctype != null and ctype != ""'>
+			AND petition_type = #{ctype}
+		</if>  -->
+		<choose>
+			<when test ='ctype != null and ctype != ""'>
+			AND petition_type = #{ctype}
+			</when>
+			<otherwise>
+			AND petition_type = 'EP'
+			</otherwise>
+		</choose>	
+		<if test ='searchStr != null and searchStr != ""'>
+			<choose>
+				<when test ='searchId == "1"'>
+				AND UPPER(petition_title) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when> 
+				<when test ='searchId == "2"'>
+				AND UPPER(product_name) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when> 
+				<when test ='searchId == "3"'>
+				AND UPPER(name) LIKE '%' || UPPER(#{searchStr}) || '%'
+				</when> 
+				<otherwise>
+				AND (UPPER(petition_title) LIKE '%' || UPPER(#{searchStr}) || '%'
+				 OR  UPPER(product_name)  LIKE '%' || UPPER(#{searchStr}) || '%'
+				 OR  UPPER(name)  LIKE '%' || UPPER(#{searchStr}) || '%')
+				</otherwise>
+			</choose>
+		</if> 
+		<if test ='searchFromDate != null and searchFromDate != ""'>
+			AND SUBSTR(write_time, 1, 8) <![CDATA[>=]]> REPLACE(#{searchFromDate}, '-', '')
+		</if> 
+		<if test ='searchToDate != null and searchToDate != ""'>
+			AND SUBSTR(write_time, 1, 8) <![CDATA[<=]]> REPLACE(#{searchToDate}, '-', '')
+		</if>
+ 		 order by write_time desc
+		) aa
+	)
+	WHERE RNUM BETWEEN #{START} AND #{END}
+	</select>
+	
+	<!-- 신고내역 상세 조회 1(자동차결함) -->
+	<select id="selectEptnPetition" parameterType="egovMap" resultType="egovMap">
+		SELECT 
+		  a.petition_id, a.resident_id as resident_id, a.petition_open_degree,  a.petition_title, a.name
+		, a.write_time, a.read_count, a.car_cnt, a.eptn_status, a.covered_distance, a.purchase_type, a.sns_open
+		, FN_GET_CODE_NM('AS9', a.eptn_status) AS eptn_status_name
+		, FN_GET_CODE_NM('DI1', a.purchase_type) AS purchase_type_name
+		, a.purchase_date, a.zipcode, a.addr_base, a.addr_detail, a.telephone
+		, a.cellular, a.email_address, a.common_info_agree, a.info_division
+		, FN_GET_CODE_NM('CU1', a.owner_relationship) AS owner_relationship_name
+		, a.mail_yn, a.sms_yn, a.newsletters_yn, b.vehicle_number, b.owner_name, b.owner_resident_id as owner_resident_id, b.owner_zipcode
+		, substr(b.vehicle_id_number, 0, 4) ||'*************' as vehicle_id_number, b.product_name, b.car_division
+		, FN_GET_CODE_NM('VI6', b.car_division) AS car_division_name
+		, b.maker_code
+		, FN_GET_CODE_NM('314', b.maker_code) AS maker_code_name
+		, b.year_type, b.trans_type
+		, FN_GET_CODE_NM('DI2', b.trans_type) AS trans_type_name
+		, b.drive_method
+		, FN_GET_CODE_NM('VI8', b.drive_method) AS drive_method_name
+		, b.baegi, b.fuel_code
+		, FN_GET_CODE_NM('VI3', b.fuel_code) AS fuel_code_name
+		FROM eptn_petition a, vehicle_info b 
+		WHERE a.vehicle_info_id = b.vehicle_info_id 
+		AND a.petition_id = #{petitionId}
+	</select>
+	<select id="selectDefectInfoList" parameterType="String" resultType="egovMap">
+		SELECT a.petition_id, a.defect_seq, a.petition_division_code, b.division_name
+		, DECODE(a.is_exchanged_component,'Y','예','아니오') AS is_exchanged_component
+		, a.defect_frequency, DECODE(a.accident_occurred,'Y','예','아니오') AS accident_occurred
+		, SUBSTR(a.petition_content, 0, LENGTH(a.petition_content)) AS petition_content
+		FROM defect_info a
+		LEFT OUTER JOIN eptn_petition_division b on a.petition_division_code = b.petition_division_code 
+		WHERE a.petition_id = #{petitionId}
+		ORDER BY a.defect_seq ASC
+	</select>
+	<select id="selectDefectInfoDetailList" parameterType="egovMap" resultType="egovMap">
+		SELECT seq, defect_date, defect_distance, defect_speed 
+		FROM defect_info_Detail 
+		WHERE petition_id = #{petitionId}
+		AND defect_seq = #{defectSeq}
+		ORDER BY seq ASC
+	</select>
+	<select id="selectDefectInfoFileList" parameterType="String" resultType="egovMap">
+		SELECT file_id, attachment, attachment_original, server_path
+		FROM defect_info_file 
+		WHERE petition_id = #{petitionId} 
+		ORDER BY file_id ASC
+	</select>
+	<!-- //신고내역 상세 조회 1(자동차결함) -->
+	
+	
+	<!-- 신고내역 상세 조회 2(건설기계결함) -->
+	<select id="selectReport" parameterType="egovMap" resultType="egovMap">
+		SELECT petition_id, name, resident_id, password, sex
+			 , email_address, telephone, cellular, zipcode, addr_base, addr_detail
+			 , petition_open_degree, common_info_agree, petition_title
+			 , SUBSTR(petition_content, 0, LENGTH(petition_content)) AS petition_content
+			 , vehicle_number, year_type, owner_relationship, owner_name, owner_resident_id
+			 , owner_sex, product_code, product.code_value as product_name, maker_code
+			 , maker.code_value as maker_name, ip_address, recp_path, recp.code_value as recp_path_name
+			 , read_count, acception_time, eptn_status, status.code_value as eptn_status_name
+			 , mail_yn, sms_yn, write_time, last_modified, covered_distance, purchase_type
+			 , purchase.code_value as purchase_name, purchase_date, work_time, remark, sns_open
+		FROM const_machine_report report 
+		LEFT OUTER JOIN const_common_code product on report.product_code = product.subcode and product.maincode = 'VI2' 
+		LEFT OUTER JOIN const_common_code maker on report.maker_code = maker.subcode and maker.maincode = 'VI1' 
+		LEFT OUTER JOIN const_common_code recp on report.recp_path = recp.subcode and recp.maincode = 'AS2' 
+		LEFT OUTER JOIN const_common_code status on report.eptn_status = status.subcode and status.maincode = 'AS1' 
+		LEFT OUTER JOIN const_common_code purchase on report.purchase_type = purchase.subcode and purchase.maincode = 'DI1' 
+		WHERE report.petition_id = #{petitionId} 
+	</select>
+	<select id="selectReportFileList" parameterType="String" resultType="egovMap">
+		SELECT file_id, attachment, attachment_original, server_path  
+		  FROM const_machine_file 
+		 WHERE petition_id = #{petitionId} 
+		 ORDER BY file_id ASC
+	</select>
+	<!-- //신고내역 상세 조회 2(건설기계결함) --> 
+	
+	
+	<!-- 신고내역 상세 조회 3(리콜신고) -->
+	<select id="selectRecallDis" parameterType="egovMap" resultType="egovMap">	
+		SELECT a.petition_id, a.resident_id as resident_id, a.petition_open_degree,  a.petition_title, a.name
+		, SUBSTR(dis_cont, 0, LENGTH(dis_cont)) AS petition_content
+		, a.write_time, a.read_count, a.car_cnt, a.eptn_status, a.covered_distance, a.purchase_type, a.sns_open
+		, FN_GET_CODE_NM('DI1', a.purchase_type) AS purchase_type_name
+		, a.purchase_date, a.zipcode, a.addr_base, a.addr_detail, a.telephone, a.cellular, a.email_address, a.common_info_agree, a.info_division
+		, FN_GET_CODE_NM('CU1', a.owner_relationship) AS owner_relationship_name
+		, a.mail_yn, a.sms_yn, a.newsletters_yn, b.vehicle_number, b.owner_name, b.owner_resident_id as owner_resident_id, b.owner_zipcode
+		, substr(b.vehicle_id_number, 0, 4) ||'*************' as vehicle_id_number, b.product_name, b.car_division
+		, FN_GET_CODE_NM('VI6', b.car_division) AS car_division_name
+		, b.maker_code
+		, FN_GET_CODE_NM('314', b.maker_code) AS maker_code_name
+		, b.year_type, b.trans_type
+		, FN_GET_CODE_NM('DI2', b.trans_type) AS trans_type_name
+		, b.drive_method
+		, FN_GET_CODE_NM('VI8', b.drive_method) AS drive_method_name
+		, b.baegi, b.fuel_code
+		, FN_GET_CODE_NM('VI3', b.fuel_code) AS fuel_code_name
+		, a.dis_yn, a.dis_cont
+		FROM recall_dis_master a, vehicle_info b 
+		WHERE a.vehicle_info_id = b.vehicle_info_id 		
+		AND a.petition_id = #{petitionId} 
+	</select>
+	<!-- recall_dis_file 테이블을 생성해서 바꿀지 미정 -->
+	<select id="selectRecallDisFileList" parameterType="String" resultType="egovMap">
+		SELECT file_id, attachment, attachment_original, server_path
+		FROM defect_info_file
+		WHERE petition_id = #{petitionId} 
+		ORDER BY file_id ASC
+	</select>
+	<!-- //신고내역 상세 조회 3(리콜신고) -->
+	
+	<!-- 신고내역 SNS공개여부 수정 -->
+	<update id="updateSnsYnSttemntEP" parameterType="egovMap">
+		UPDATE EPTN_PETITION
+		SET SNS_OPEN = #{isOpen }
+		WHERE PETITION_ID IN
+ 		<foreach collection="contentsIdListEP" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<update id="updateSnsYnSttemntCMR" parameterType="egovMap">
+		UPDATE CONST_MACHINE_REPORT
+		SET SNS_OPEN = #{isOpen }
+		WHERE PETITION_ID IN
+ 		<foreach collection="contentsIdListCMR" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	<update id="updateSnsYnSttemntRDM" parameterType="egovMap">
+		UPDATE RECALL_DIS_MASTER
+		SET SNS_OPEN = #{isOpen }
+		WHERE PETITION_ID IN
+ 		<foreach collection="contentsIdListRDM" item="item" index="index" separator="," open="(" close=")" >
+            #{item, jdbcType=VARCHAR}
+ 		</foreach>
+	</update>
+	
+	
+</mapper>

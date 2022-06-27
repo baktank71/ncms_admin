@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>자동차리콜센터 관리자시스템</title>
+<meta name="title" content="자동차리콜센터 관리자시스템"/>
+<meta name="author" content="자동차리콜센터 관리자시스템"/>
+<meta name="keywords" content="자동차리콜센터 관리자시스템"/>
+<link href="assets/css/all.css" rel="stylesheet" type="text/css" />
+<link rel="shortcut icon" href="assets/images/favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+<header>
+	<div class="uk-container uk-container-expand">
+        <div uk-navbar>
+            <div class="uk-navbar-left">
+                <ul class="uk-navbar-nav">
+                    <li class="uk-active"><a href="#">결함정보</a></li>
+                    <li><a href="#">종합분석</a></li>
+                    <li><a href="#">조사관리</a></li>
+                    <li><a href="#">사후관리</a></li>
+                    <li><a href="#">업무지원</a></li>
+                    <li><a href="#">관리자기능</a></li>
+                    <li><a href="#">통계</a></li>
+                </ul>
+            </div>
+            <div class="uk-navbar-right">
+                관리자님 접속중<span>2019년 4월 23일 09:11:06</span>
+                <button class="uk-button uk-button-default uk-button-small" onclick="window.location.href='editProfile.html'">개인정보변경</button>
+                <button class="uk-button uk-button-default uk-button-small">로그아웃</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<nav>
+    <div class="sidebar uk-background-default uk-light">
+        <div class="logo">
+            <a href="index.html"><h1 class="skip">자동차리콜센터 로고</h1></a>
+        </div>
+        <h2 class="skip">좌측메뉴</h2>
+        <ul class="uk-nav-parent-icon" uk-nav>
+            <li class="uk-parent uk-open"><!-- 메뉴가 펼쳐졌을땐 .uk-open -->
+                <a href="#">결함신고</a>
+                <ul class="uk-nav-sub">
+                    <li><a href="#">3뎁스예시</a></li>
+                    <li><a href="#">3뎁스예시</a></li>
+                </ul>
+            </li>
+            <li><!-- 하위메뉴가 없을땐 .uk-parent 제거 -->
+                <a href="#">리콜불만신고</a>
+            </li>
+            <li>
+                <a href="#">검사소정보</a>
+            </li>
+            <li>
+                <a href="#">언론모니터링</a>
+            </li>
+            <li>
+                <a href="#">무상점검수리내역</a>
+            </li>
+            <li>
+                <a href="#">기술정보자료</a>
+            </li>
+            <li>
+                <a href="#">기술분석자료</a>
+            </li>
+            <li>
+                <a href="#">사고기록장치</a>
+            </li>
+            <li>
+                <a href="#">외국리콜모니터링</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<article>
+	<h2 class="skip">컨텐츠</h2>
+	<section>
+		<div class="content-padder">
+            <div class="uk-section-small">
+                <div class="uk-container uk-container-large">
+                    <h3>메뉴명</h3>
+                    <div class="uk-card uk-card-default uk-card-body uk-child-width-1-1">
+                        <h4>신청인</h4>
+                        <table class="uk-table uk-table-divider table-stat">
+                            <caption>신청인</caption>
+                            <colgroup>
+                                <col style="width: 10%;">
+                                <col style="width: 20%;">
+                                <col style="width: 10%;">
+                                <col style="width: 20%;">
+                                <col style="width: 10%;">
+                                <col style="width: 20%;">
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>요청번호</th>
+                                    <td>1</td>
+                                    <th>신청자명</th>
+                                    <td>1</td>
+                                    <th>신청일자</th>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <th>차명</th>
+                                    <td>1</td>
+                                    <th>차량번호</th>
+                                    <td>1</td>
+                                    <th>접수일자</th>
+                                    <td>1</td>
+                                </tr>                                
+                            </tbody>
+                        </table>
+
+                        <div class="uk-text-left uk-margin-small-bottom">
+                            <button type="button" class="uk-button uk-button-small uk-button-primary uk-margin-small-right">필수</button>
+                            <button type="button" class="uk-button uk-button-small uk-button-default">선택</button>    
+                        </div>                     
+
+                        <div uk-grid>
+                            <div class="uk-width-1-2 event-cout">
+                                <div>
+                                    <table class="uk-table uk-table-divider table-stat">
+                                        <caption>이벤트갯수</caption>
+                                        <colgroup>
+                                            <col style="width: 30%;">
+                                            <col style="width: 70%;">
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <th>이벤트갯수</th>
+                                                <td>1</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div>
+                                    <button type="button" class="uk-button uk-button-small uk-button-primary">생성</button>
+                                    <button type="button" class="uk-button uk-button-small uk-button-primary">차트로 보기</button>
+                                </div>
+                            </div>
+
+                            <div class="uk-width-1-2">
+                                <div class="table-scroll row-3">
+                                    <table class="uk-table uk-table-divider table-stat">
+                                        <caption>이벤트 차수</caption>
+                                        <colgroup>
+                                            <col style="width: 20%;">
+                                            <col style="width: 40%;">
+                                            <col style="width: 20%;">
+                                        </colgroup>
+                                        <thead>
+                                            <tr>
+                                                <th>이벤트 차수</th>
+                                                <th>등록일자</th>
+                                                <th>등록자</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="uk-text-center">
+                                            <tr>
+                                                <td>1</td>
+                                                <td>1</td>
+                                                <td>1</td>
+                                            </tr>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>1</td>
+                                                <td>1</td>
+                                            </tr>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>1</td>
+                                                <td>1</td>
+                                            </tr>                                                          
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-scroll row-15 uk-margin-medium-top">
+                            <table class="uk-table uk-table-divider table-stat">
+                                <caption></caption>
+                                <colgroup>
+                                    <col style="width: 8%;">
+                                    <col style="width: 40%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 10%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>순번</th>
+                                        <th>기록항목</th>
+                                        <th>기록간격</th>
+                                        <th>기록값</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="uk-text-center">
+                                    <tr>
+                                        <td>1</td>
+                                        <td class="uk-text-left">1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td><button class="uk-button uk-button-default uk-button-small">작성</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td class="uk-text-left">1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td><button class="uk-button uk-button-default uk-button-small">작성</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td class="uk-text-left">1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td><button class="uk-button uk-button-default uk-button-small">작성</button></td>
+                                    </tr>                                                         
+                                </tbody>
+                            </table>
+                        </div>                              
+                    </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>		
+	</section>
+</article>
+
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/uikit.min.js"></script>
+<script src="assets/js/uikit-icons.min.js"></script>
+</body>
+</html>

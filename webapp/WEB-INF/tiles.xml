@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+	"http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+	<!-- 로그인 페이지 설정 -->
+	<definition name="login" template="/WEB-INF/jsp/layout/login_layout.jsp" >
+		<put-attribute name="body" value="/WEB-INF/jsp/om/login.jsp" />
+	</definition>
+	
+	<!-- 메인 페이지 레이아웃 설정 -->
+	<definition name="main_layout" template="/WEB-INF/jsp/layout/main_layout.jsp" preparer="ts.ncms.ad.common.MenuPreparer" >
+		<put-attribute name="header" value="/WEB-INF/jsp/layout/main_header.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/jsp/layout/main_footer.jsp" />
+	</definition>
+	<definition name="MAIN.*" extends="main_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="MAIN.*/*" extends="main_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	
+	<!-- 서브 페이지 레이아웃 설정 -->
+	<definition name="sub_layout" template="/WEB-INF/jsp/layout/sub_layout.jsp" preparer="ts.ncms.ad.common.MenuPreparer" >
+		<put-attribute name="header" value="/WEB-INF/jsp/layout/sub_header.jsp" />
+		<put-attribute name="nav" value="/WEB-INF/jsp/layout/sub_nav.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/jsp/layout/sub_footer.jsp" />
+	</definition>
+	<definition name="HA.*" extends="sub_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="HA.*/*" extends="sub_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	<definition name="HA.*/*/*" extends="sub_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	<definition name="HA.*/*/*/*" extends="sub_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+	
+	<!-- 팝업 페이지 레이아웃 설정 -->
+	<definition name="pop_layout" template="/WEB-INF/jsp/layout/pop_layout.jsp" >
+		<put-attribute name="body" value="" />
+	</definition>
+	<definition name="POP.*" extends="pop_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="POP.*/*" extends="pop_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	<definition name="POP.*/*/*" extends="pop_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	<definition name="POP.*/*/*/*" extends="pop_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+	
+	<!-- 미리보기 페이지 레이아웃 설정 -->
+	<definition name="hp_layout" template="/WEB-INF/jsp/layout/hp_layout.jsp" >
+		<put-attribute name="body" value="" />
+	</definition>
+	<definition name="HPOP.*/*" extends="hp_layout">
+		<put-attribute name="body" expression="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	
+	
+	<!-- 이 아래는 나중에 지울부분 -->
+	<!--<definition name="appTmp" template="/WEB-INF/jsp/layout/app/layout.jsp" preparer="ts.ncms.ad.common.MenuPreparer" >
+		<put-attribute name="app_content" value="" />
+	</definition>
+	<definition name="*.app" extends="appTmp">
+		<put-attribute name="app_content" expression="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="*/*.app" extends="appTmp">
+		<put-attribute name="app_content" expression="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	<definition name="*/*/*.app" extends="appTmp">
+		<put-attribute name="app_content" expression="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	<definition name="*/*/*/*.app" extends="appTmp">
+		<put-attribute name="app_content" expression="/WEB-INF/jsp/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+	
+	
+	<definition name="operatorTmp" template="/WEB-INF/jsp/layout/operator/layout.jsp" preparer="ts.ncms.ad.common.AdminMenuPreparer" >
+		<put-attribute name="operator_header" value="/WEB-INF/jsp/layout/operator/header.jsp" />
+		<put-attribute name="operator_content" value="" />
+		<put-attribute name="operator_footer" value="/WEB-INF/jsp/layout/operator/footer.jsp" />
+	</definition>
+	<definition name="*.operator" extends="operatorTmp">
+		<put-attribute name="operator_content" expression="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="*/*.operator" extends="operatorTmp">
+		<put-attribute name="operator_content" expression="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	<definition name="*/*/*.operator" extends="operatorTmp">
+		<put-attribute name="operator_content" expression="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	<definition name="*/*/*/*.operator" extends="operatorTmp">
+		<put-attribute name="operator_content" expression="/WEB-INF/jsp/{1}/{2}/{3}/{4}.jsp" />
+	</definition>		-->
+
+	
+</tiles-definitions>

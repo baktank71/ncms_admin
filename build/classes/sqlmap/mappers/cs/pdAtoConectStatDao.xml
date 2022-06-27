@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cs.pdStat">
+
+	<!-- 접속수 년도별 -->
+	<select id="uYear" parameterType="egovMap" resultType="egovMap">
+		SELECT TO_CHAR(REG_DATE, 'yyyy') GB, COUNT(*) CNT 
+  		FROM TB_HP_PV_LOG 
+		WHERE 1=1
+		<if test='searchFromYear != null and searchFromYear != ""'>
+			AND TO_CHAR(REG_DATE, 'yyyy') <![CDATA[ >= ]]> #{searchFromYear}
+		</if>
+		<if test='searchToYear != null and searchToYear != ""'> 
+			AND TO_CHAR(REG_DATE, 'yyyy') <![CDATA[ <= ]]> #{searchToYear}
+		</if>
+  	GROUP BY TO_CHAR(REG_DATE, 'yyyy')
+	ORDER BY GB DESC
+	</select>
+
+	<!-- 접속수 월별 -->
+	<select id="uMonth" parameterType="egovMap" resultType="egovMap">
+		SELECT TO_CHAR(REG_DATE, 'yyyy-MM') GB, COUNT(*) CNT 
+	  	FROM TB_HP_PV_LOG 
+	  	<choose><when test='searchMonth != null and searchMonth != ""'>
+		  	WHERE TO_CHAR(REG_DATE, 'yyyyMM') = #{searchDate}
+	  	</when><otherwise>
+		  	WHERE TO_CHAR(REG_DATE, 'yyyy') = #{searchYear}
+	  	</otherwise></choose>
+	  	GROUP BY TO_CHAR(REG_DATE, 'yyyy-MM')
+		ORDER BY GB DESC
+	</select>
+
+	<!-- 접속수 일별 -->
+	<select id="uDay" parameterType="egovMap" resultType="egovMap">
+		SELECT TO_CHAR(REG_DATE, 'yyyy-MM-dd') GB, COUNT(*) CNT 
+	  	FROM TB_HP_PV_LOG 
+	  	WHERE TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ >= ]]> replace(#{searchFromDate},'-','') 
+	  	AND TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ <= ]]> replace(#{searchToDate},'-','')
+		GROUP BY TO_CHAR(REG_DATE, 'yyyy-MM-dd')
+		ORDER BY GB DESC
+	</select>
+
+	<!-- 접속수 시간대별 -->
+	<select id="uTime" parameterType="egovMap" resultType="egovMap">
+		SELECT SUBSTR(GB, 9) ||'시' AS GB, SUM(CNT) AS CNT 
+		FROM (
+			SELECT TO_CHAR(REG_DATE, 'yyyyMMddHH') GB, COUNT(*) CNT 
+		  	FROM TB_HP_PV_LOG  
+			WHERE TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ >= ]]> replace(#{searchFromDate},'-','') 
+			AND TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ <= ]]> replace(#{searchToDate},'-','') 
+			GROUP BY TO_CHAR(REG_DATE, 'yyyyMMddHH')
+		)
+		GROUP BY SUBSTR(GB, 9)
+		ORDER BY GB DESC
+	</select>
+
+
+
+	<!-- 방문자수 년도별 -->
+	<select id="nuYear" parameterType="egovMap" resultType="egovMap">
+		SELECT SUBSTR(VIST_DTM, 0, 4) AS GB
+			 , SUM(VIST_CNT) AS CNT
+		FROM TB_HP_VIST_CNT
+		WHERE 1=1
+		<if test='searchFromYear != null and searchFromYear != ""'>
+			AND SUBSTR(VIST_DTM, 0, 4) <![CDATA[ >= ]]> #{searchFromYear}
+		</if>
+		<if test='searchToYear != null and searchToYear != ""'> 
+			AND SUBSTR(VIST_DTM, 0, 4) <![CDATA[ <= ]]> #{searchToYear}
+		</if>
+		GROUP BY SUBSTR(VIST_DTM, 0, 4)
+		ORDER BY GB DESC
+	</select>
+	<!-- <select id="nuYear" parameterType="egovMap" resultType="egovMap">
+	SELECT GB, COUNT(*) CNT FROM (
+		SELECT TO_CHAR(REG_DATE, 'yyyy') GB, IP 
+		FROM TB_HP_PV_LOG 
+		GROUP BY TO_CHAR(REG_DATE, 'yyyy'), IP
+	) GROUP BY GB
+	ORDER BY GB DESC
+  </select> -->
+	
+	<!-- 방문자수 월별 -->
+	<select id="nuMonth" parameterType="egovMap" resultType="egovMap">
+		SELECT TO_CHAR(TO_DATE(SUBSTR(VIST_DTM, 0, 6), 'YYYYMM'), 'YYYY-MM') AS GB
+			 , SUM(VIST_CNT) AS CNT
+		FROM TB_HP_VIST_CNT
+		<choose><when test='searchMonth != null and searchMonth != ""'>
+			WHERE SUBSTR(VIST_DTM, 0, 6) = #{searchDate}
+		</when><otherwise>
+			WHERE SUBSTR(VIST_DTM, 0, 4) = #{searchYear} 
+		</otherwise></choose>
+		GROUP BY SUBSTR(VIST_DTM, 0, 6)
+		ORDER BY GB DESC
+	</select>
+	<!-- <select id="nuMonth" parameterType="egovMap" resultType="egovMap">
+	SELECT GB, COUNT(*) CNT FROM (
+		SELECT TO_CHAR(REG_DATE, 'yyyy-MM') GB, IP 
+		FROM TB_HP_PV_LOG 
+	  	<choose><when test='searchMonth != null and searchMonth != ""'>
+		  	WHERE TO_CHAR(REG_DATE, 'yyyyMM') <![CDATA[ >= ]]> #{searchDate} 
+		  	AND TO_CHAR(REG_DATE, 'yyyyMM') <![CDATA[ <= ]]> #{searchDate}
+	  	</when><otherwise>
+		  	WHERE TO_CHAR(REG_DATE, 'yyyy') <![CDATA[ >= ]]> #{searchYear} 
+		  	AND TO_CHAR(REG_DATE, 'yyyy') <![CDATA[ <= ]]> #{searchYear}
+	  	</otherwise></choose>
+		GROUP BY TO_CHAR(REG_DATE, 'yyyy-MM'), IP
+	) GROUP BY GB
+	ORDER BY GB DESC
+  </select> -->
+	
+	<!-- 방문자수 일별 -->
+	<select id="nuDay" parameterType="egovMap" resultType="egovMap">
+		SELECT TO_CHAR(TO_DATE(SUBSTR(VIST_DTM, 0, 8), 'YYYYMMDD'), 'YYYY-MM-DD') AS GB
+			 , SUM(VIST_CNT) AS CNT
+		FROM TB_HP_VIST_CNT
+		WHERE SUBSTR(VIST_DTM, 0, 8) <![CDATA[ >= ]]> replace(#{searchFromDate},'-','') 
+		AND SUBSTR(VIST_DTM, 0, 8)<![CDATA[ <= ]]> replace(#{searchToDate},'-','') 
+		GROUP BY SUBSTR(VIST_DTM, 0, 8)
+		ORDER BY GB DESC
+	</select>
+	<!-- <select id="nuDay" parameterType="egovMap" resultType="egovMap">
+	SELECT GB, COUNT(*) CNT FROM (
+		SELECT TO_CHAR(REG_DATE, 'yyyy-MM-dd') GB, IP 
+		FROM TB_HP_PV_LOG 
+		WHERE TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ >= ]]> replace(#{searchFromDate},'-','') 
+		AND TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ <= ]]> replace(#{searchToDate},'-','') 
+		GROUP BY TO_CHAR(REG_DATE, 'yyyy-MM-dd'), IP
+	) GROUP BY GB
+	ORDER BY GB DESC  
+  </select> -->
+	
+	<!-- 방문자수 시간대별 --> 
+	<select id="nuTime" parameterType="egovMap" resultType="egovMap">
+		SELECT SUBSTR(VIST_DTM, 9, 2) || '시' AS GB
+			 , SUM(VIST_CNT) AS CNT
+		FROM TB_HP_VIST_CNT
+		WHERE SUBSTR(VIST_DTM, 0, 8) <![CDATA[ >= ]]> replace(#{searchFromDate},'-','') 
+		AND SUBSTR(VIST_DTM, 0, 8)<![CDATA[ <= ]]> replace(#{searchToDate},'-','') 
+		GROUP BY SUBSTR(VIST_DTM, 9, 2) 
+		ORDER BY GB DESC
+	</select>
+	<!-- <select id="nuTime" parameterType="egovMap" resultType="egovMap">
+	SELECT GB||'시' AS GB, COUNT(*) CNT FROM (
+		SELECT SUBSTR(GB, 9) GB, IP FROM (
+            SELECT TO_CHAR(REG_DATE, 'yyyyMMddHH') GB, IP 
+            FROM TB_HP_PV_LOG 
+			WHERE TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ >= ]]> replace(#{searchFromDate},'-','') 
+			AND TO_CHAR(REG_DATE, 'yyyyMMdd') <![CDATA[ <= ]]> replace(#{searchToDate},'-','') 
+            GROUP BY TO_CHAR(REG_DATE, 'yyyyMMddHH'), IP
+        )
+	) GROUP BY GB  
+    ORDER BY GB DESC
+  </select> -->
+	
+	<!-- year list -->
+	<select id="selectYearList" resultType="egovMap">
+		SELECT SUBSTR(VIST_DTM, 0, 4) AS YEAR
+		FROM TB_HP_VIST_CNT
+		GROUP BY SUBSTR(VIST_DTM, 0, 4)
+		ORDER BY SUBSTR(VIST_DTM, 0, 4) DESC 
+	</select>  
+	<!-- <select id="selectYearList" resultType="egovMap">
+		SELECT TO_CHAR(REG_DATE, 'YYYY') AS year    
+		FROM TB_HP_PV_LOG   
+		GROUP BY TO_CHAR(REG_DATE, 'YYYY')   
+		ORDER BY TO_CHAR(REG_DATE, 'YYYY') DESC
+	</select> -->
+	
+</mapper>
