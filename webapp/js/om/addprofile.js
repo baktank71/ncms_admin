@@ -20,7 +20,7 @@
 			 * @name         : setUIEvent
 			 * @description  : UI에서 사용하는 이벤트 및 초기설정을 수행한다. 
 			 * @date         : 2019. 12. 09  
-			 * @author	     : 이성훈
+			 * @author	     : 
 			 */	
 			setUIEvent : function(e) {
 				$("#addProfile").on('click', $addProfile.event.profileSave);		    //변경 버튼
@@ -37,15 +37,14 @@
 				var params = {};
 				
 				var regex = /^.*(?=^.{9,15}$)(?=.*\d)(?=.*[a-zA-Z])(?=.*[~,!,@,#,$,*,(,),=,+,_,.,|]).*$/; 	//정규식
-				var passwordCheck = $("#userPwNew").val().replace(/ /gi, "");		//모든 공백 제거하기
+				var passwordCheck = $("#mbPw").val().replace(/ /gi, "");		//모든 공백 제거하기
 				
-				params.userId = $("#userId").val();					//로그인한 사람의 아이디
-				params.userPw = $("#userPw").val();					//기존 패스워드
-				params.userPwNew = $("#userPwNew").val();			//새 비밀번호
-				params.userPwConfirm = $("#userPwConfirm").val();	//새 비밀번호 확인
+				params.userId = $("#mbId").val();					//로그인한 사람의 아이디
+				params.userPw = $("#mbPw").val();					//기존 패스워드
+				params.userPwNew = $("#userPw).val();			//새 비밀번호
 				
 				//기존패스워드, 새비밀번호, 새 비밀번호 확인 이 3개 중 하나라도 값이 없을 경우 비밀번호 입력하라고 문구 뜬다.
-				if(params.userPw == "" || params.userPwNew == "" || params.userPwConfirm == "") {
+				if(params.userPw == "" ) {
 					alert("비밀번호를 입력해주세요.");
 					return;
 				} 
@@ -53,7 +52,7 @@
 				//정규식 체크 
 				if(regex.test(passwordCheck) == false && passwordCheck != "") {
 					alert("비밀번호는  9~15자 영문 숫자 특수문자 혼용만 가능합니다.");
-					$("#userPwNew").focus();
+					$("#mbPw").focus();
 					return;
 				}
 				
